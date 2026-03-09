@@ -10,7 +10,7 @@
 #    • Creates & runs minimal Spring Boot 2.7.18 Hello World
 # ────────────────────────────────────────────────
 
-VERSION="1.0.0"
+VERSION="1.0.1"
 
 # Colors
 if [ -t 1 ]; then
