@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # ────────────────────────────────────────────────
-#  springboot2 – version 1.0.0
+#  springboot2 – version 1.0.2
 #  One-command installer + launcher:
 #    • Installs itself if not present
 #    • Installs SDKMAN! if missing
@@ -10,7 +10,7 @@
 #    • Creates & runs minimal Spring Boot 2.7.18 Hello World
 # ────────────────────────────────────────────────
 
-VERSION="1.0.1"
+VERSION="1.0.2"
 
 # Colors
 if [ -t 1 ]; then
@@ -66,7 +66,7 @@ add_to_bashrc() {
 }
 
 # ────────────────────────────────────────────────
-# Self-install logic – now continues after install
+# Self-install logic – continues after install
 # ────────────────────────────────────────────────
 
 install_self() {
@@ -110,11 +110,10 @@ install_self() {
             add_to_bashrc
             echo ""
             echo "${YELLOW}→ ~/.local/bin was added to ~/.bashrc${NC}"
-            echo "  Run one of these to use 'springboot2' immediately:"
-            echo "    ${GREEN}source ~/.bashrc${NC}"
+            echo "  To use 'springboot2' immediately in this session run:"
             echo "    ${GREEN}. ~/.bashrc${NC}"
-            echo ""
-            echo "  (continuing in current session anyway...)"
+            echo "  (or open a new terminal)"
+            echo "  Continuing in current session anyway..."
         fi
 
         echo "${GREEN}Proceeding to setup SDKMAN + Java + Maven + Spring Boot demo...${NC}"
@@ -133,7 +132,7 @@ install_self() {
 
 show_help() {
     cat << 'EOF'
-springboot2 – version 1.0.0
+springboot2 – version 1.0.2
 
 One-command legacy Spring Boot 2.7 environment setup
 
@@ -149,6 +148,10 @@ What it does:
   • Installs Maven 3.9.13
   • Creates ~/spring-boot-hello-sdkman (Spring Boot 2.7.18 minimal project)
   • Builds & runs it[](http://localhost:8080)
+
+Note: First time SDKMAN is installed, you may need to run
+      . "$HOME/.sdkman/bin/sdkman-init.sh"  or open new terminal
+      before 'sdk' command becomes available in current session.
 
 EOF
 }
@@ -217,17 +220,34 @@ else
     echo "   Installing SDKMAN..."
     curl -s "https://get.sdkman.io" | bash
     [ $? -ne 0 ] && { echo "${RED}SDKMAN install failed${NC}"; exit 1; }
-    
-    source "$HOME/.sdkman/bin/sdkman-init.sh" 2>/dev/null || {
-        echo "${YELLOW}Note: You may need to open a new terminal later${NC}"
-    }
+
+    echo "   Loading SDKMAN in current session..."
+    # Using . (dot) instead of source — more portable (POSIX sh compatible)
+    # Note: SDKMAN creates functions → sourcing only affects current process
+    #       After first install you may still need to run this manually or
+    #       open new terminal if 'sdk' is not found immediately.
+    if [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]; then
+        . "$HOME/.sdkman/bin/sdkman-init.sh"
+    else
+        echo "${YELLOW}Warning: sdkman-init.sh not found${NC}"
+    fi
 fi
 
-if ! type sdk >/dev/null 2>&1; then
-    echo "${RED}sdk command not available — try opening new terminal${NC}"
+# Verify sdk is now usable
+if ! command -v sdk >/dev/null 2>&1; then
+    echo ""
+    echo "${YELLOW}sdk command is still not available in this session.${NC}"
+    echo "This is normal on first SDKMAN install."
+    echo ""
+    echo "Please run one of these, then re-execute 'springboot2':"
+    echo "  ${GREEN}. \"\$HOME/.sdkman/bin/sdkman-init.sh\"${NC}"
+    echo "  ${GREEN}. ~/.bashrc${NC}     (if it was updated)"
+    echo "  or simply open a new terminal / tab"
+    echo ""
     exit 1
 fi
 
+echo "   SDKMAN ready."
 sdk version | head -n 1
 
 # 2. Java 8 (Corretto)
