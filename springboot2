@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # ────────────────────────────────────────────────
-#  springboot2 – version 1.0.2
+#  springboot2 – version 1.0.3
 #  One-command installer + launcher:
 #    • Installs itself if not present
 #    • Installs SDKMAN! if missing
@@ -10,7 +10,7 @@
 #    • Creates & runs minimal Spring Boot 2.7.18 Hello World
 # ────────────────────────────────────────────────
 
-VERSION="1.0.2"
+VERSION="1.0.3"
 
 # Colors
 if [ -t 1 ]; then
@@ -75,11 +75,11 @@ install_self() {
     echo ""
 
     if $NEEDS_SUDO; then
-        echo "Recommended install command was:"
-        echo "  ${GREEN}sudo curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sudo sh${NC}"
+        echo "Recommended install command was (don't use sh, uses bash instead, for sdkman uses 'source' which may failed in sh):"
+        echo "  ${GREEN}sudo curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sudo bash${NC}"
     else
-        echo "Recommended install command was:"
-        echo "  ${GREEN}curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sh${NC}"
+        echo "Recommended install command was (don't use sh, uses bash instead):"
+        echo "  ${GREEN}curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | bash${NC}"
     fi
 
     echo ""
@@ -132,7 +132,7 @@ install_self() {
 
 show_help() {
     cat << 'EOF'
-springboot2 – version 1.0.2
+springboot2 – version 1.0.3
 
 One-command legacy Spring Boot 2.7 environment setup
 

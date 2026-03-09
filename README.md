@@ -1,6 +1,6 @@
 # springboot2
 
-<img src="https://img.shields.io/badge/Version-1.0.2-blue?style=flat-square" alt="Version">  
+<img src="https://img.shields.io/badge/Version-1.0.3-blue?style=flat-square" alt="Version">  
 <img src="https://img.shields.io/badge/Java-8-orange?style=flat-square&logo=java" alt="Java 8">  
 <img src="https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen?style=flat-square&logo=spring" alt="Spring Boot 2.7">  
 <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License MIT">
@@ -42,16 +42,16 @@ Open http://localhost:8080 (or your machine's IP from another device)
 
 ## Installation
 
-The fastest way:
+The fastest way (don't uses sh, since sdkman requires 'source' command may fail in sh):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sh
+curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | bash
 ```
 
 **If you get permission denied** (most Linux/macOS systems when writing to `/usr/local/bin`):
 
 ```bash
-sudo curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sudo sh
+sudo curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sudo bash
 ```
 
 ### Smart install behavior
@@ -72,7 +72,7 @@ springboot2
 # → setup everything → create project → build → run on :8080
 
 springboot2 version
-# → springboot2 version 1.0.2
+# → springboot2 version 1.0.3
 
 springboot2 help
 # shows this help
