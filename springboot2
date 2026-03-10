@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ────────────────────────────────────────────────
-#  springboot2 – version 1.0.7
+#  springboot2 – version 1.0.8
 #  One-command installer + launcher for Spring Boot 2.7.x (last 2.x LTS)
 #    • Installs itself if not present
 #    • Installs SDKMAN! if missing
@@ -10,7 +10,7 @@
 #    • Creates & runs minimal Spring Boot 2.7.18 Hello World
 # ────────────────────────────────────────────────
 
-VERSION="1.0.7"
+VERSION="1.0.8"
 APP=springboot2
 GITUSER=Wilgat
 JAVA_MAIN_VER=8
@@ -420,8 +420,8 @@ public class ${CLASS_NAME} {
 
     @GetMapping("/")
     public String home() {
-        return "Hello from Spring Boot ${SPRINGBOOT_VER}!\\n" +
-               "Running on Java ${JAVA_MAIN_VER} (Amazon Corretto)\\n";
+        return "Hello from Spring Boot ${SPRINGBOOT_VER}!<br/>\\n" +
+               "Running on Java ${JAVA_MAIN_VER} (Amazon Corretto)<br/>\\n";
     }
 }
 EOF

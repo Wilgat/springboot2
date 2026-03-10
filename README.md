@@ -1,6 +1,6 @@
 # springboot2
 
-<img src="https://img.shields.io/badge/Version-1.0.7-blue?style=flat-square" alt="Version">  
+<img src="https://img.shields.io/badge/Version-1.0.8-blue?style=flat-square" alt="Version">  
 <img src="https://img.shields.io/badge/Java-8-orange?style=flat-square&logo=java" alt="Java 8">  
 <img src="https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen?style=flat-square&logo=spring" alt="Spring Boot 2.7">  
 <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License MIT">
@@ -72,7 +72,7 @@ springboot2
 # → setup everything → create project → build → run on :8080
 
 springboot2 version
-# → springboot2 version 1.0.7
+# → springboot2 version 1.0.8
 
 springboot2 help
 # shows this help
