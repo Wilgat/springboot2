@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ────────────────────────────────────────────────
-#  springboot2 – version 1.0.5
+#  springboot2 – version 1.0.6
 #  One-command installer + launcher for Spring Boot 2.7.x (last 2.x LTS)
 #    • Installs itself if not present
 #    • Installs SDKMAN! if missing
@@ -10,7 +10,7 @@
 #    • Creates & runs minimal Spring Boot 2.7.18 Hello World
 # ────────────────────────────────────────────────
 
-VERSION="1.0.5"
+VERSION="1.0.6"
 APP=springboot2
 GITUSER=Wilgat
 JAVA_MAIN_VER=8
@@ -516,3 +516,5 @@ main() {
     setup_springboot
     build_and_run
 }
+
+main
