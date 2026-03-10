@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ────────────────────────────────────────────────
-#  springboot2 – version 1.0.6
+#  springboot2 – version 1.0.7
 #  One-command installer + launcher for Spring Boot 2.7.x (last 2.x LTS)
 #    • Installs itself if not present
 #    • Installs SDKMAN! if missing
@@ -10,7 +10,7 @@
 #    • Creates & runs minimal Spring Boot 2.7.18 Hello World
 # ────────────────────────────────────────────────
 
-VERSION="1.0.6"
+VERSION="1.0.7"
 APP=springboot2
 GITUSER=Wilgat
 JAVA_MAIN_VER=8
@@ -288,34 +288,32 @@ setup_sdkman() {
 # ────────────────────────────────────────────────
 # 2. Java 8 Amazon Corretto
 setup_java() {
-echo ""
-    echo "→ Setting up Java $JAVA_BRAND $JAVA_ID ..."
+    echo ""
+    echo "→ Installing Java 8 ($JAVA_BRAND)..."
 
-    if sdk list java | grep -qF "$JAVA_ID"; then
-        if ! sdk current java | grep -qF "$JAVA_ID"; then
-            echo "   Installing & setting default Java $JAVA_ID"
-            yes | sdk install java "$JAVA_ID" || {
-                echo "${RED}sdk install java failed${NC}" >&2
-                exit 1
-            }
-            yes | sdk default java "$JAVA_ID" || true
-        else
-            echo "   Java $JAVA_ID already set as current"
-        fi
-    else
-        echo "${RED}Java identifier $JAVA_ID no longer available${NC}" >&2
-        echo "Run 'sdk list java' manually to choose another version."
+    sdk install java $JAVA_ID </dev/null || {
+        echo "${RED}Failed to install Java 8 $JAVA_BRAND${NC}"
+        echo "Run 'sdk list java' to see available versions"
         exit 1
-    fi
+    }
 
+    sdk default java $JAVA_ID >/dev/null 2>&1
+    sdk use   java $JAVA_ID >/dev/null 2>&1 || true
+
+    # Prefer SDKMAN java
     JAVA_CMD="$(sdk home java current)/bin/java"
-    if [ ! -x "$JAVA_CMD" ]; then
-        echo "${RED}Cannot find java binary after sdk install${NC}" >&2
-        exit 1
+    if [ -x "$JAVA_CMD" ]; then
+        "$JAVA_CMD" -version 2>&1 | head -n 1 || {
+            echo "${RED}java command not found after install${NC}"
+            exit 1
+        }
+    else
+        java -version 2>&1 | head -n 1 || {
+            echo "${RED}java command not found after install${NC}"
+            exit 1
+        }
     fi
 
-    echo -n "   "
-    "$JAVA_CMD" -version 2>&1 | head -n1
 }
 
 # ────────────────────────────────────────────────
@@ -516,5 +514,4 @@ main() {
     setup_springboot
     build_and_run
 }
-
 main
