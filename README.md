@@ -25,7 +25,7 @@ Perfect when you need to:
 1. Installs **SDKMAN!** (if not already present)
 2. Installs **Java 8** (Amazon Corretto — most reliable free distribution)
 3. Installs **Maven 3.9.13** (latest 3.9.x line still fully Java 8 compatible)
-4. Creates a fresh minimal project in `~/spring-boot-hello-sdkman`
+4. Creates a fresh minimal project in `~/springboot-springboot2`
    - Spring Boot **2.7.18** (final release of the 2.7 line)
    - Single `@RestController` returning "Hello from Spring Boot..."
    - Configured to bind to `0.0.0.0:8080`
@@ -42,7 +42,7 @@ Open http://localhost:8080 (or your machine's IP from another device)
 
 ## Installation
 
-The fastest way (don't uses sh, since sdkman requires 'source' command may fail in sh):
+The fastest way (uses `bash` explicitly because SDKMAN init needs it):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | bash
@@ -80,14 +80,14 @@ springboot2 help
 
 ## Project location & cleanup
 
-- Created in: `~/spring-boot-hello-sdkman`
+- Created in: `~/springboot-springboot2`
 - If you run `springboot2` again → **old folder is deleted** and recreated
 - Want to keep your experiments? → rename or move the folder before re-running
 
 ## Requirements
 
 - curl
-- bash / sh compatible shell
+- bash (strongly preferred — SDKMAN init relies on it)
 - internet connection (first run)
 - ~400–800 MB disk space (mainly for SDKMAN + Java + Maven caches)
 
@@ -98,6 +98,41 @@ No Docker, no manual SDKMAN install, no fighting with `JAVA_HOME`.
 Spring Boot 2.7 reached end-of-life in Nov 2023, but many legacy systems, training materials, certification exams, and client projects still run on it in 2026~.
 
 This tiny script removes 90% of the "but on my machine it works with Java 17…" friction when you need a **genuine Java 8 + SB 2.7** environment quickly.
+
+## Design & Development Approach
+
+This script follows a strict, clean, beginner-friendly shell scripting style with these goals in mind:
+
+- Maximum portability (Linux, macOS, minimal containers, etc.)
+- Very readable & maintainable code
+- Clear progress messages at every step
+- Safe self-install (one-liner friendly)
+- Graceful handling of SDKMAN's "must source init.sh" behavior
+
+### Requirement Analysis Summary
+
+- **Shell**: `#!/bin/bash` (required because of SDKMAN usage & sourcing needs)
+- **Privileges**: auto-detect root vs normal user → `/usr/local/bin` vs `~/.local/bin`
+- **Install style**: one-liner `curl | bash` friendly (GitHub raw), user & sudo variants
+- **Constants**: all important values (versions, paths, URLs) at the top
+- **Safety**: temp files → atomic `mv` for writes, duplicate checks for PATH
+- **PATH help**: auto-add `~/.local/bin` to `~/.bashrc` (idempotent) + friendly message
+- **SDKMAN special case**: explicit sourcing in current session + fallback warning if not available yet
+
+### High-Level Flow / Pseudo-code Overview
+
+| Step | Action / Module                     | Main purpose / Logic                                                                 |
+|------|-------------------------------------|--------------------------------------------------------------------------------------|
+| 1    | Header & constants                  | Define colors, versions, URLs, paths, project name, etc.                             |
+| 2    | Detect install location             | Root → `/usr/local/bin`, normal user → `~/.local/bin`                                |
+| 3    | Check if already installed          | Smart check: look in both global & user dir for normal users                         |
+| 4    | Self-install (if missing)           | Download to temp → chmod → mv → add to PATH if needed → success message              |
+| 5    | Parse arguments                     | `help`, `version`, or default = run full setup                                       |
+| 6    | Setup SDKMAN                        | Install if missing → source init.sh → check `sdk` exists or warn & exit              |
+| 7    | Setup Java 8 Corretto               | `sdk install java 8-amzn` → set default → verify                                     |
+| 8    | Setup Maven                         | `sdk install maven 3.9.13` → set default → verify                                    |
+| 9    | Create Spring Boot project          | Delete old dir → create structure → write pom.xml / Java / properties (atomic)       |
+| 10   | Build & run                         | `mvn clean package` → `java -jar target/*.jar`                                       |
 
 ## Contributing
 
@@ -115,4 +150,4 @@ Ideas welcome:
 [MIT License](LICENSE)
 
 Made with mild frustration and one cup of espresso  
-2026- 
+2026-
