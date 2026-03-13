@@ -6,7 +6,7 @@
 #
 #    • Installs itself (~/.local/bin or /usr/local/bin)
 #    • Installs SDKMAN! if missing
-#    • Installs latest Java 8 Amazon Corretto (8-amzn)
+#    • Installs latest Java 8 Amazon Corretto (8.0.472-amzn)
 #    • Installs recent Maven (3.9.9)
 #    • (Re)creates & runs minimal Spring Boot 2.7.18 Hello World
 #
@@ -32,7 +32,7 @@ USER_BIN="${HOME}/.local/bin"
 PROJECT_NAME="springboot-${APP_NAME}"
 PROJECT_DIR="${HOME}/${PROJECT_NAME}"
 
-JAVA_ID="8-amzn"
+JAVA_ID="8.0.472-amzn"
 MAVEN_VER="3.9.9"
 SPRINGBOOT_VER="2.7.18"
 ARTIFACT_ID="hello-${APP_NAME}"
