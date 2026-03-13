@@ -19,7 +19,7 @@
 #  GitHub:   https://github.com/Wilgat/springboot2
 # ────────────────────────────────────────────────
 
-APP_NAME="${0##*/}"
+APP_NAME="springboot2"
 APP_VER="1.0.9"
 
 REPO_USER="Wilgat"
