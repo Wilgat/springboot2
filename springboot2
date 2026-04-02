@@ -6,7 +6,7 @@
 # One-command installer + launcher for Spring Boot 2.7.x (last 2.x LTS)
 #
 #   • Installs itself (~/.local/bin or /usr/local/bin)
-#   • Installs SDKMAN! (with better detection for official / Homebrew / MacPorts)
+#   • Installs SDKMAN! with better multi-platform support
 #   • Installs Java 8 Amazon Corretto + Maven
 #   • (Re)creates & runs minimal Spring Boot 2.7.18 Hello World
 #
@@ -24,8 +24,8 @@
 #
 # !!! DO NOT MODIFY OR SIMPLIFY ANY PART OF THIS HEADER OR FUNCTIONS !!!
 #
-# This script is deliberately verbose and repetitive to survive harsh environments.
-# Shebang changed to #!/bin/bash because SDKMAN requires bash.
+# Shebang is deliberately set to #!/bin/bash because SDKMAN requires Bash.
+# Repeated safe defaults, redundant checks, and heavy comments are intentional.
 #
 # Aligned with https://github.com/Wilgat/ciao
 # Last aligned: April 2026
@@ -74,7 +74,7 @@ info() { printf "${GREEN}→ %s${NC}\n" "$*"; }
 warn() { printf "${YELLOW}⚠  %s${NC}\n" "$*"; }
 
 # =============================================================================
-# detect_install_locations() 
+# detect_install_locations()
 # =============================================================================
 detect_install_locations() {
     : "${GLOBAL_BIN:=/usr/local/bin}"
@@ -91,7 +91,7 @@ detect_install_locations() {
 }
 
 # =============================================================================
-# is_installed() 
+# is_installed()
 # =============================================================================
 is_installed() {
     : "${GLOBAL_BIN:=/usr/local/bin}"
@@ -105,20 +105,94 @@ is_installed() {
     fi
 }
 
-# (Other defensive functions: get_installed_version, in_path, add_to_shell_path, 
-# perform_self_install, maybe_install, version_check, self_update are kept as before)
+# =============================================================================
+# in_path()
+# =============================================================================
+in_path() {
+    case ":${PATH}:" in
+        *":${INSTALL_DIR}:"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
 # =============================================================================
-# Alpine Linux Detection & Bash Requirement
+# add_to_shell_path()
+# =============================================================================
+add_to_shell_path() {
+    local line='export PATH="$HOME/.local/bin:$PATH"'
+
+    if [ -f "${HOME}/.bashrc" ] && ! grep -qF "$line" "${HOME}/.bashrc"; then
+        printf '\n# Added by %s installer\n%s\n' "$APP_NAME" "$line" >> "${HOME}/.bashrc"
+    fi
+
+    if [ -f "${HOME}/.zshrc" ] && ! grep -qF "$line" "${HOME}/.zshrc"; then
+        printf '\n# Added by %s installer\n%s\n' "$APP_NAME" "$line" >> "${HOME}/.zshrc"
+    fi
+
+    info "~/.local/bin added to shell configuration"
+}
+
+# =============================================================================
+# perform_self_install()
+# =============================================================================
+perform_self_install() {
+    info "${APP_NAME} not found → installing to ${INSTALL_PATH}"
+
+    : "${INSTALL_DIR:=/usr/local/bin}"
+
+    mkdir -p "${INSTALL_DIR}" 2>/dev/null || die "Cannot create ${INSTALL_DIR}"
+
+    local tmp
+    tmp=$(mktemp "/tmp/${APP_NAME}-install-XXXXXXXX") || die "mktemp failed"
+
+    curl -fsSL "${SCRIPT_URL}" -o "${tmp}" || {
+        rm -f "${tmp}"
+        die "Download failed: ${SCRIPT_URL}"
+    }
+
+    chmod 755 "${tmp}" || die "chmod failed"
+
+    if mv "${tmp}" "${INSTALL_PATH}"; then
+        info "Installed to ${INSTALL_PATH}"
+    else
+        rm -f "${tmp}"
+        die "Cannot install to ${INSTALL_PATH} (permission?)"
+    fi
+
+    if [ "${IS_ROOT}" -eq 0 ] && ! in_path; then
+        add_to_shell_path
+        warn "Please run '. ~/.bashrc' or open a new terminal"
+    fi
+}
+
+# =============================================================================
+# maybe_install()
+# =============================================================================
+maybe_install() {
+    if [ -t 1 ]; then
+        info "${APP_NAME} is not installed."
+        printf "Would you like to install it now? (y/N) "
+        read -r ans
+        case "$ans" in
+            [Yy]*) perform_self_install ;;
+            *) die "Installation declined by user." ;;
+        esac
+    else
+        perform_self_install
+    fi
+}
+
+# =============================================================================
+# check_alpine_requirements()
 # =============================================================================
 check_alpine_requirements() {
     if [ -f "/etc/alpine-release" ]; then
         info "Alpine Linux detected."
         if ! command -v bash >/dev/null 2>&1; then
             warn "bash is required for SDKMAN! on Alpine Linux."
-            printf "Please run the following command first:\n"
-            printf "    ${GREEN}apk add bash${NC}\n"
-            printf "Then re-run this script using bash:\n"
+            printf "\nPlease install bash first:\n"
+            printf "    ${GREEN}apk add bash${NC}\n\n"
+            printf "Then re-run this script with:\n"
             printf "    ${GREEN}bash <(curl -fsSL ${SCRIPT_URL})${NC}\n"
             exit 1
         fi
@@ -126,45 +200,182 @@ check_alpine_requirements() {
 }
 
 # =============================================================================
-# Enhanced SDKMAN Setup with better multi-platform support
+# setup_sdkman()
 # =============================================================================
 setup_sdkman() {
     info "Checking SDKMAN..."
 
     check_alpine_requirements
 
-    # Check if SDKMAN is already available
     if [ -d "${HOME}/.sdkman" ] && command -v sdk >/dev/null 2>&1; then
         info "SDKMAN already installed."
         return 0
     fi
 
-    info "SDKMAN not found. Installing..."
-
-    # Official installer (most reliable)
-    curl -s "https://get.sdkman.io" | bash || die "SDKMAN official install failed"
+    info "Installing SDKMAN..."
+    curl -s "https://get.sdkman.io" | bash || die "SDKMAN install failed"
 
     local init="${HOME}/.sdkman/bin/sdkman-init.sh"
     if [ -s "$init" ]; then
-        # shellcheck source=/dev/null
         . "$init"
     fi
 
     if ! command -v sdk >/dev/null 2>&1; then
-        warn "SDKMAN installed but 'sdk' command not available yet."
-        printf "\nPlease run one of the following, then retry:\n"
+        warn "SDKMAN installed but 'sdk' command is not yet available."
+        printf "\nPlease run one of these commands, then retry:\n"
         printf "    ${GREEN}. \"${HOME}/.sdkman/bin/sdkman-init.sh\"${NC}\n"
-        printf "    ${GREEN}source ~/.sdkman/bin/sdkman-init.sh${NC}\n"
-        printf "    or open a new terminal\n\n"
+        printf "    or simply open a new terminal\n\n"
         exit 1
     fi
 
     info "SDKMAN is ready."
 }
 
-# Rest of the functions (setup_java, setup_maven, write_file_atomic, 
-# setup_springboot_project, build_and_run, parse_arguments, show_help, main, etc.)
-# remain with the same defensive style as previous full version.
+setup_java() {
+    info "Setting up Java 8 (Amazon Corretto)..."
+    sdk install java "${JAVA_ID}" </dev/null || die "Java install failed"
+    sdk default java "${JAVA_ID}" >/dev/null 2>&1
+    sdk use java "${JAVA_ID}" >/dev/null 2>&1 || true
+    java -version 2>&1 | head -n 1 || die "Java not working"
+}
+
+setup_maven() {
+    info "Setting up Maven ${MAVEN_VER}..."
+    sdk install maven "${MAVEN_VER}" </dev/null || die "Maven install failed"
+    sdk default maven "${MAVEN_VER}" >/dev/null 2>&1
+    sdk use maven "${MAVEN_VER}" >/dev/null 2>&1 || true
+    mvn --version | head -n 3 || die "Maven not working"
+}
+
+write_file_atomic() {
+    local target="$1"
+    local tmp
+    tmp=$(mktemp "${target}.XXXXXXXX") || die "mktemp failed"
+
+    cat > "${tmp}" || { rm -f "${tmp}"; die "write failed"; }
+    mv "${tmp}" "${target}" || { rm -f "${tmp}"; die "mv failed → ${target}"; }
+}
+
+setup_springboot_project() {
+    info "Preparing Spring Boot ${SPRINGBOOT_VER} demo → ${PROJECT_DIR}"
+
+    if [ -d "${PROJECT_DIR}" ]; then
+        info "Removing old project folder..."
+        rm -rf "${PROJECT_DIR}"
+    fi
+
+    mkdir -p "${PROJECT_DIR}" || die "Cannot create project dir"
+    cd "${PROJECT_DIR}" || die "cd failed"
+
+    write_file_atomic "pom.xml" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>hello-springboot2</artifactId>
+    <version>0.0.1</version>
+    <packaging>jar</packaging>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+EOF
+
+    mkdir -p "src/main/java/com/example"
+    write_file_atomic "src/main/java/com/example/HelloApplication.java" <<'EOF'
+package com.example;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@SpringBootApplication
+@RestController
+public class HelloApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(HelloApplication.class, args);
+    }
+    @GetMapping("/")
+    public String home() {
+        return "Hello from Spring Boot 2.7.18!<br/>Running on Java 8 (Amazon Corretto)";
+    }
+}
+EOF
+
+    mkdir -p "src/main/resources"
+    write_file_atomic "src/main/resources/application.properties" <<EOF
+server.port=${PORT}
+server.address=${BIND_IP}
+EOF
+
+    info "Spring Boot project created successfully."
+}
+
+build_and_run() {
+    info "Building project..."
+    mvn clean package -DskipTests || {
+        warn "Build failed."
+        printf "Debug: cd \"%s\" && mvn clean package\n" "${PROJECT_DIR}"
+        exit 1
+    }
+
+    printf "\n==============================================================\n"
+    printf "  Spring Boot %s is starting...\n" "${SPRINGBOOT_VER}"
+    printf "  → Open: http://localhost:%s/\n" "${PORT}"
+    printf "  → Ctrl+C to stop\n"
+    printf "==============================================================\n\n"
+
+    exec java -jar "target/${JAR_NAME}"
+}
+
+show_help() {
+    cat <<EOF
+${APP_NAME} v${APP_VER} — Spring Boot 2.7.x quick setup
+
+Usage:
+  ${APP_NAME}                 Setup + build + run
+  ${APP_NAME} version         Show version
+  ${APP_NAME} version-check   Compare with latest
+  ${APP_NAME} self-update     Update to latest
+  ${APP_NAME} help            This help
+EOF
+}
+
+parse_arguments() {
+    COMMAND="run"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            help|--help|-h)                    COMMAND="help" ;;
+            version|--version)                 COMMAND="version" ;;
+            version-check|--version-check)     COMMAND="version-check" ;;
+            self-update|--self-update)         COMMAND="self-update" ;;
+            *) warn "Unknown argument: $1"; show_help; exit 1 ;;
+        esac
+        shift
+    done
+}
 
 main() {
     : "${HOME:=/root}"
@@ -188,7 +399,7 @@ main() {
     esac
 
     printf "\n==============================================================\n"
-    printf "  %s v%s  –  Spring Boot 2.7 Launcher\n" "${APP_NAME}" "${APP_VER}"
+    printf "  %s v%s  –  SDKMAN + Java 8 + Maven + Spring Boot 2.7\n" "${APP_NAME}" "${APP_VER}"
     printf "==============================================================\n\n"
 
     setup_sdkman
