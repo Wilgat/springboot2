@@ -1,153 +1,137 @@
 # springboot2
 
-<img src="https://img.shields.io/badge/Version-1.0.9-blue?style=flat-square" alt="Version">  
-<img src="https://img.shields.io/badge/Java-8-orange?style=flat-square&logo=java" alt="Java 8">  
-<img src="https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen?style=flat-square&logo=spring" alt="Spring Boot 2.7">  
-<img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License MIT">
+<img src="https://img.shields.io/badge/Version-1.3.0-blue?style=flat-square" alt="Version">  
+<img src="https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk" alt="Java 21">  
+<img src="https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen?style=flat-square&logo=springboot" alt="Spring Boot 3.3">  
+<img src="https://img.shields.io/badge/Maven-3.9.9-red?style=flat-square&logo=apachemaven" alt="Maven 3.9">  
+<img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License">
 
-**One stupidly simple command to get a working Spring Boot 2.7 environment in 2026+**
+**The friendliest way to run Spring Boot 2.7 in one command.**
 
-```bash
-springboot2
-```
+> A robust, extremely defensive **Bash** script that installs SDKMAN!, Java 8 Amazon Corretto, Maven, and instantly creates + runs a minimal Spring Boot 2.7.18 application — built as part of the Wilgat defensive tool family.
 
-→ installs everything needed → creates a minimal Hello World project → builds it → runs it on port 8080
+---
 
-Perfect when you need to:
+## ✨ Features
 
-- quickly reproduce / test legacy Spring Boot 2.7 behavior
-- demonstrate Java 8 + Maven + Spring Boot 2.x setup
-- onboard someone to an old codebase without fighting tool versions
-- show "it still works in 2026" proof-of-life
+- One-liner install (`curl | bash`)
+- Supports both **user** (`~/.local/bin`) and **root/system** (`/usr/local/bin`) installation
+- Automatically installs SDKMAN! + Java 8 Amazon Corretto + Maven 3.9.9
+- Creates and runs a clean Spring Boot 2.7.18 demo project
+- Self-installing, self-updating, and self-repairing
+- `--version-check`, `--self-update`, `--force`, `--quiet` support
+- Multi-shell PATH support (bash, zsh, fish)
+- Extremely defensive coding style
 
-## What it actually does (in order)
+### New in v1.2.0
+- Shebang changed to `#!/bin/bash` for better SDKMAN compatibility
+- Improved SDKMAN handling across different installation methods (official, Homebrew, MacPorts)
+- Explicit support and instructions for **Alpine Linux** (requires `bash`)
+- Better verbose guidance for non-bash environments
 
-1. Installs **SDKMAN!** (if not already present)
-2. Installs **Java 8** (Amazon Corretto — most reliable free distribution)
-3. Installs **Maven 3.9.13** (latest 3.9.x line still fully Java 8 compatible)
-4. Creates a fresh minimal project in `~/springboot-springboot2`
-   - Spring Boot **2.7.18** (final release of the 2.7 line)
-   - Single `@RestController` returning "Hello from Spring Boot..."
-   - Configured to bind to `0.0.0.0:8080`
-5. Runs `mvn clean package`
-6. Starts the application (`java -jar ...`)
+---
 
-After ~1–3 minutes (depending on internet & machine) you should see:
+## 🚀 Quick Installation
 
-```
-Tomcat started on port(s): 8080 (http) ...
-```
-
-Open http://localhost:8080 (or your machine's IP from another device)
-
-## Installation
-
-The fastest way (uses `bash` explicitly because SDKMAN init needs it):
-
-```bash
+**For normal users:**
+```sh
 curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | bash
 ```
 
-**If you get permission denied** (most Linux/macOS systems when writing to `/usr/local/bin`):
-
-```bash
-sudo curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sudo bash
+**System-wide (root):**
+```sh
+curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sudo bash
 ```
 
-### Smart install behavior
+---
 
-- **Root / sudo** → installs to `/usr/local/bin/springboot2`
-- **Normal user** → installs to `~/.local/bin/springboot2`
-  - creates the directory if missing
-  - adds `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc` if not already present
-  - shows clear instruction to run `. ~/.bashrc` or `source ~/.bashrc`
+## 📖 Usage
 
-Interactive terminals ask for confirmation.  
-Piped/non-interactive runs (CI, scripts) install automatically.
-
-## Usage
-
-```bash
-springboot2
-# → setup everything → create project → build → run on :8080
-
-springboot2 version
-# → springboot2 version 1.0.9
-
-springboot2 help
-# shows this help
+```sh
+springboot2                    # Full setup + build + run (default)
+springboot2 version            # Show current version
+springboot2 version-check      # Compare with latest on GitHub
+springboot2 self-update        # Update to latest version
+springboot2 help               # Show help
 ```
 
-## Project location & cleanup
+After running, open: **http://localhost:8080**
 
-- Created in: `~/springboot-springboot2`
-- If you run `springboot2` again → **old folder is deleted** and recreated
-- Want to keep your experiments? → rename or move the folder before re-running
+---
 
-## Requirements
+## Important Platform Notes
 
-- curl
-- bash (strongly preferred — SDKMAN init relies on it)
-- internet connection (first run)
-- ~400–800 MB disk space (mainly for SDKMAN + Java + Maven caches)
+### Alpine Linux (BusyBox ash)
+- This script requires **bash** to be installed because SDKMAN! does not work reliably under ash.
+- The script will detect Alpine and show clear instructions to install bash first:
+  ```sh
+  apk add bash
+  ```
+- After installing bash, re-run the script using `bash`.
 
-No Docker, no manual SDKMAN install, no fighting with `JAVA_HOME`.
+### macOS
+- The script detects and supports SDKMAN! installed via:
+  - Official installer (`curl -s "https://get.sdkman.io" | bash`)
+  - Homebrew (`brew install sdkman`)
+  - MacPorts
+- It provides verbose guidance on how to properly source SDKMAN! in both bash and zsh.
 
-## Why this exists
+### Git Bash (Windows)
+- Fully supported with defensive handling.
 
-Spring Boot 2.7 reached end-of-life in Nov 2023, but many legacy systems, training materials, certification exams, and client projects still run on it in 2026~.
+### Other Linux (Rocky/RHEL/CentOS, Ubuntu, Debian, etc.)
+- Excellent support when bash is available (default on most distributions).
 
-This tiny script removes 90% of the "but on my machine it works with Java 17…" friction when you need a **genuine Java 8 + SB 2.7** environment quickly.
+---
 
-## Design & Development Approach
+## Program Structure
 
-This script follows a strict, clean, beginner-friendly shell scripting style with these goals in mind:
+The script follows the strict linear and defensive structure of the `ciao` template (heavily commented, redundant safe defaults, protected functions, etc.).
 
-- Maximum portability (Linux, macOS, minimal containers, etc.)
-- Very readable & maintainable code
-- Clear progress messages at every step
-- Safe self-install (one-liner friendly)
-- Graceful handling of SDKMAN's "must source init.sh" behavior
+---
 
-### Requirement Analysis Summary
+## Platform Compatibility
 
-- **Shell**: `#!/bin/bash` (required because of SDKMAN usage & sourcing needs)
-- **Privileges**: auto-detect root vs normal user → `/usr/local/bin` vs `~/.local/bin`
-- **Install style**: one-liner `curl | bash` friendly (GitHub raw), user & sudo variants
-- **Constants**: all important values (versions, paths, URLs) at the top
-- **Safety**: temp files → atomic `mv` for writes, duplicate checks for PATH
-- **PATH help**: auto-add `~/.local/bin` to `~/.bashrc` (idempotent) + friendly message
-- **SDKMAN special case**: explicit sourcing in current session + fallback warning if not available yet
+| Platform                  | Shell     | Status       | Notes |
+|---------------------------|-----------|--------------|-------|
+| **Alpine Linux**          | ash → bash| Good         | Requires `apk add bash` |
+| **Git Bash (Windows)**    | Bash      | Good         | Supported |
+| **Rocky / RHEL / CentOS** | Bash      | Excellent    | No issues |
+| **macOS**                 | Bash / zsh| Good         | SDKMAN via official / Homebrew / MacPorts supported with guidance |
+| **Standard Linux**        | Bash      | Excellent    | Primary target |
 
-### High-Level Flow / Pseudo-code Overview
+---
 
-| Step | Action / Module                     | Main purpose / Logic                                                                 |
-|------|-------------------------------------|--------------------------------------------------------------------------------------|
-| 1    | Header & constants                  | Define colors, versions, URLs, paths, project name, etc.                             |
-| 2    | Detect install location             | Root → `/usr/local/bin`, normal user → `~/.local/bin`                                |
-| 3    | Check if already installed          | Smart check: look in both global & user dir for normal users                         |
-| 4    | Self-install (if missing)           | Download to temp → chmod → mv → add to PATH if needed → success message              |
-| 5    | Parse arguments                     | `help`, `version`, or default = run full setup                                       |
-| 6    | Setup SDKMAN                        | Install if missing → source init.sh → check `sdk` exists or warn & exit              |
-| 7    | Setup Java 8 Corretto               | `sdk install java 8-amzn` → set default → verify                                     |
-| 8    | Setup Maven                         | `sdk install maven 3.9.13` → set default → verify                                    |
-| 9    | Create Spring Boot project          | Delete old dir → create structure → write pom.xml / Java / properties (atomic)       |
-| 10   | Build & run                         | `mvn clean package` → `java -jar target/*.jar`                                       |
+## Why This Coding Style & Heavy Comments?
+
+This project strictly follows the **ciao defensive coding style**. Extensive comments, repeated safe defaults, redundant checks, and strong warnings (`!!! DO NOT MODIFY OR SIMPLIFY !!!`) are intentional.
+
+### Purpose of This Style
+- Survive `curl | bash` in harsh environments
+- Protect against AI over-simplification
+- Make the script reusable as a template for other Wilgat tools
+- Provide maximum clarity and robustness
+
+---
+
+## Project Philosophy
+
+> "Write code that is easy to copy, hard to break, and self-documenting."
+
+---
 
 ## Contributing
 
-Ideas welcome:
+Please respect the defensive coding style and protective comments when submitting changes.
 
-- `--project-dir=/custom/path`
-- `--spring-boot-version=2.7.10` (or other 2.7.x patch)
-- `--java-vendor=adoptium` / `--java-version=8.0.XXX-tem`
-- `--no-run` / `--only-setup`
-- Support for Gradle instead of Maven
-- `--keep-project` flag
+---
 
 ## License
 
-[MIT License](LICENSE)
+MIT
 
-Made with mild frustration and one cup of espresso  
-2026-
+---
+
+**Part of the Wilgat defensive tool family.**
+
+*Last updated: April 2026*
