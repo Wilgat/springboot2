@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# springboot2 – version 1.4.0
+# springboot2 – version 1.5.0
 # =============================================================================
 #
 # One-command installer + launcher for Spring Boot 2.7.x (last 2.x LTS)
@@ -32,7 +32,7 @@
 # =============================================================================
 
 APP_NAME="springboot2"
-APP_VER="1.4.0"
+APP_VER="1.5.0"
 
 REPO_USER="Wilgat"
 REPO_NAME="springboot2"
@@ -69,9 +69,11 @@ else
     GREEN='' YELLOW='' RED='' NC=''
 fi
 
-die() { printf >&2 "${RED}Error: %s${NC}\n" "$*"; exit 1; }
-info() { printf "${GREEN}→ %s${NC}\n" "$*"; }
-warn() { printf "${YELLOW}⚠  %s${NC}\n" "$*"; }
+# POSIX-safe logging functions (respect quiet mode)
+info()    { [ "${QUIET}" -eq 0 ] && printf "${GREEN}[INFO]${NC} %s\n" "$*"; }
+warn()    { [ "${QUIET}" -eq 0 ] && printf "${YELLOW}[WARN]${NC} %s\n" "$*" >&2 || true; }
+error()   { printf "${RED}[ERROR]${NC} %s\n" "$*" >&2; }
+success() { [ "${QUIET}" -eq 0 ] && printf "${GREEN}[OK]${NC} %s\n" "$*"; }
 
 # =============================================================================
 # is_installed() - Robust installation check
