@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# springboot2 – version 1.9.0
+# springboot2 – version 1.10.0
 # =============================================================================
 #
 # One-command installer + launcher for Spring Boot 2.7.18
@@ -86,7 +86,7 @@
 # ----------------------------- Project Constants -----------------------------
 
 APP_NAME="springboot2"
-VERSION="1.9.0"
+VERSION="1.10.0"
 DESCRIPTION="Spring Boot 2.7.18 quick setup"
 REMOTE_VERSION=$VERSION
 
@@ -418,10 +418,6 @@ perform_self_install() {
     if is_installed && [ "${FORCE_REINSTALL}" -eq 0 ]; then
         success "${APP_NAME} is already installed. Use --force to override."
         return 0
-    fi
-
-    if [ "$IS_ROOT" -eq 0 ]; then
-        die "Self-install requires root privileges. Please run with sudo."
     fi
 
     INSTALL_PATH="${GLOBAL_BIN}/${APP_NAME}"
