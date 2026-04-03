@@ -1,13 +1,13 @@
 #!/bin/bash
 # =============================================================================
-# springboot2 – version 1.6.0
+# springboot2 – version 1.8.0
 # =============================================================================
 #
-# One-command installer + launcher for Spring Boot 2.7.x (last 2.x LTS)
+# One-command installer + launcher for Spring Boot 2.7.18
 #
 #   • Installs itself (~/.local/bin or /usr/local/bin)
 #   • Installs SDKMAN! with better multi-platform support
-#   • Installs Java 8 Amazon Corretto + Maven
+#   • Installs java 8 (Amazon Corretto) + Maven
 #   • (Re)creates & runs minimal Spring Boot 2.7.18 Hello World
 #
 # Install (user):
@@ -27,12 +27,18 @@
 # Shebang is deliberately set to #!/bin/bash because SDKMAN requires Bash.
 # Repeated safe defaults, redundant checks, and heavy comments are intentional.
 #
+# Spring Boot 2.7.x reached open-source end-of-support in late 2023 (2.7.18 was the 
+#   final OSS release). This program is intend to use Spring Boot 2.7.x for serving 
+#   a lot active projects which are still using this versions
+#
+#  Maven & Java version pinning are for reproducibility.
+#
 # Aligned with https://github.com/Wilgat/ciao
 # Last aligned: April 2026
 # =============================================================================
 
 # =============================================================================
-# WARNING - Reflection on Grok's behavior
+# WARNING - Reflection on Grok behavior
 # =============================================================================
 #
 # source: https://grok.com/share/c2hhcmQtNQ_ac07eab7-d9af-4565-aba1-f33a24cd1f16
@@ -79,8 +85,8 @@
 # ----------------------------- Project Constants -----------------------------
 
 APP_NAME="springboot2"
-VERSION="1.6.0"
-DESCRIPTION="Spring Boot 2.7.x quick setup"
+VERSION="1.8.0"
+DESCRIPTION="Spring Boot 2.7.18 quick setup"
 
 REPO_USER="Wilgat"
 REPO_NAME="springboot2"
@@ -98,13 +104,15 @@ SCRIPT_URL="https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${A
 
 : "${JAVA_ID:=8.0.482-amzn}"
 : "${JAVA_VERSION:=1.8}"
+: "${JAVA_DISTRIBUTION:=Amazon Corretto}"
+: "${JAVA_NAME:=Java ${JAVA_VERSION} (Eclipse ${JAVA_DISTRIBUTION})}"
 : "${MAVEN_VER:=3.9.14}"
 : "${SPRINGBOOT_VER:=2.7.18}"
 : "${ARTIFACT_ID:=hello-${APP_NAME}}"
 : "${CLASS_NAME:=HelloApplication}"
 : "${GROUP_ID:=com.example}"
-: "${VERSION:=0.0.1}"
-: "${JAR_NAME:=${ARTIFACT_ID}-${VERSION}.jar}"
+: "${MVN_PRJ_VERSION:=0.0.1}"
+: "${JAR_NAME:=${ARTIFACT_ID}-${MVN_PRJ_VERSION}.jar}"
 : "${PORT:=8080}"
 : "${BIND_IP:=0.0.0.0}"
 
@@ -584,7 +592,7 @@ setup_sdkman() {
 
 setup_java() {
     step_message "Setting up Java ..."
-    info "Setting up Java 8 (Amazon Corretto)..."
+    info "Setting up ${JAVA_NAME}..."
     sdk install java "${JAVA_ID}" </dev/null || die "Java install failed"
     sdk default java "${JAVA_ID}" >/dev/null 2>&1
     sdk use java "${JAVA_ID}" >/dev/null 2>&1 || true
@@ -610,7 +618,7 @@ write_file_atomic() {
 }
 
 setup_springboot_project() {
-    step_message "Setting up Springboot ..."
+    step_message "Setting up Spring Boot project ..."
 
     info "Preparing Spring Boot ${SPRINGBOOT_VER} demo → ${PROJECT_DIR}"
 
@@ -635,7 +643,7 @@ setup_springboot_project() {
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>${SPRINGBOOT_VER}</version>
         <relativePath/>
     </parent>
     <properties>
@@ -674,7 +682,7 @@ public class HelloApplication {
     }
     @GetMapping("/")
     public String home() {
-        return "Hello from Spring Boot 2.7.18!<br/>Running on Java 8 (Amazon Corretto)";
+        return "Hello from Spring Boot ${SPRINGBOOT_VER}!<br/>Running on ${JAVA_NAME}";
     }
 }
 EOF
@@ -707,7 +715,7 @@ build_and_run() {
     exec java -jar "target/${JAR_NAME}"
 }
 
-show_help() {
+show_spring2_help() {
     cat <<EOF
 ${APP_NAME} v${VERSION} — ${DESCRIPTION}
 
@@ -791,7 +799,7 @@ main() {
     case "${cmd}" in
         version-check)   version_check; exit 0 ;;
         self-update)     self_update; exit 0 ;;
-        help)            show_help; exit 0 ;;
+        help)            show_spring2_help; exit 0 ;;
         run)             ;;
         *)               die "Invalid cmd" ;;
     esac
