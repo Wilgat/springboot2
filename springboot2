@@ -173,7 +173,7 @@ step_message() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Checks whether springboot2 is already installed, supporting both root
+# Checks whether the script is already installed, supporting both root
 # and normal user installations with safe fallbacks.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
@@ -182,7 +182,6 @@ step_message() {
 is_installed() {
     : "${GLOBAL_BIN:=/usr/local/bin}"
     : "${USER_BIN:=${HOME}/.local/bin}"
-    : "${APP_NAME:=springboot2}"
     : "${INSTALL_PATH:=${GLOBAL_BIN}/${APP_NAME}}"
 
     if [ -z "${IS_ROOT:-}" ]; then
