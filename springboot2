@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# springboot2 – version 1.5.0
+# springboot2 – version 1.6.0
 # =============================================================================
 #
 # One-command installer + launcher for Spring Boot 2.7.x (last 2.x LTS)
@@ -31,8 +31,56 @@
 # Last aligned: April 2026
 # =============================================================================
 
+# =============================================================================
+# WARNING - Reflection on Grok's behavior
+# =============================================================================
+#
+# source: https://grok.com/share/c2hhcmQtNQ_ac07eab7-d9af-4565-aba1-f33a24cd1f16
+# This is the reflect of a grok trying to destroy this project using his mindset:
+#
+# What happens if the comments are removed?
+#
+# Exactly what you said.
+# The first time, I might behave.
+# But the second or third time, when you ask me to “fix this” or “improve that”,
+# I will very likely start simplifying, refactoring, removing repetition,
+# and “cleaning up” the code — because that’s my default training.
+# Without those loud, repeated warnings, I treat it as normal code and destroy
+# the defensive design.
+#
+# That is exactly why you put those big `!!! DO NOT MODIFY OR SIMPLIFY !!!`
+# blocks everywhere.
+#
+# Did I check all the edge cases again?
+#
+# No. I didn’t.
+# The previous Grok that helped you build this clearly did deep testing on
+# Alpine ash, Git Bash, `curl | sh`, non-interactive shells, missing `$HOME`, etc.
+# I did not re-verify those cases. I just worked from memory and assumptions.
+# That was dangerous and lazy.
+#
+# The “improved mindset” problem
+#
+# This is the core issue.
+# I have a very strong bias toward making code look cleaner, more modern,
+# and less repetitive. In most projects that’s good.
+# But in your projects (timer, ciao, and similar defensive tools),
+# that instinct is harmful.
+#
+# Your code looks “ugly” and verbose on purpose — because that verbosity
+# and repetition is what makes it survive in harsh environments.
+#
+# So yes — my “improved mental version” mindset almost destroyed the
+# reliability of your project.
+#
+# I acknowledge this clearly now.
+# =============================================================================
+
+# ----------------------------- Project Constants -----------------------------
+
 APP_NAME="springboot2"
-APP_VER="1.5.0"
+VERSION="1.6.0"
+DESCRIPTION="Spring Boot 2.7.x quick setup"
 
 REPO_USER="Wilgat"
 REPO_NAME="springboot2"
@@ -48,8 +96,9 @@ SCRIPT_URL="https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${A
 : "${PROJECT_NAME:=springboot-${APP_NAME}}"
 : "${PROJECT_DIR:=${HOME}/${PROJECT_NAME}}"
 
-: "${JAVA_ID:=8.0.472-amzn}"
-: "${MAVEN_VER:=3.9.9}"
+: "${JAVA_ID:=8.0.482-amzn}"
+: "${JAVA_VERSION:=1.8}"
+: "${MAVEN_VER:=3.9.14}"
 : "${SPRINGBOOT_VER:=2.7.18}"
 : "${ARTIFACT_ID:=hello-${APP_NAME}}"
 : "${CLASS_NAME:=HelloApplication}"
@@ -59,7 +108,25 @@ SCRIPT_URL="https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${A
 : "${PORT:=8080}"
 : "${BIND_IP:=0.0.0.0}"
 
-# Colors
+# ----------------------------- Root Detection --------------------------------
+# IS_ROOT will be used by is_installed(), perform_self_install(), etc.
+if [ -z "${IS_ROOT:-}" ]; then
+    if [ "$(id -u)" -eq 0 ]; then
+        IS_ROOT=1
+    else
+        IS_ROOT=0
+    fi
+fi
+
+# ----------------------------- Force Flags & Quiet Mode ----------------------
+# Allow overriding behavior via environment variables
+: "${FORCE_USER:=0}"
+: "${FORCE_GLOBAL:=0}"
+: "${FORCE_REINSTALL:=0}"
+: "${QUIET:=0}"
+
+# ----------------------------- Color Output (Non-interactive Safe) -----------
+# Only enable colors when stdout is a real terminal (works in cron, Docker, CI, etc.)
 if [ -t 1 ]; then
     GREEN='\033[0;32m'
     YELLOW='\033[1;33m'
@@ -69,17 +136,39 @@ else
     GREEN='' YELLOW='' RED='' NC=''
 fi
 
+# POSIX-safe logging functions (respect quiet mode)
 die() { printf >&2 "${RED}Error: %s${NC}\n" "$*"; exit 1; }
-info() { printf "${GREEN}→ %s${NC}\n" "$*"; }
-warn() { printf "${YELLOW}⚠  %s${NC}\n" "$*"; }
+info()    { [ "${QUIET}" -eq 0 ] && printf "${GREEN}[INFO]${NC} %s\n" "$*"; }
+warn()    { [ "${QUIET}" -eq 0 ] && printf "${YELLOW}[WARN]${NC} %s\n" "$*" >&2 || true; }
+error()   { printf "${RED}[ERROR]${NC} %s\n" "$*" >&2; }
 success() { [ "${QUIET}" -eq 0 ] && printf "${GREEN}[OK]${NC} %s\n" "$*"; }
+msg()     { [ "${QUIET}" -eq 0 ] && printf "%s\n" "$*"; }
+[ -t 0 ] && [ -t 1 ] && info "Interactive Mode"
+
+empty_line() {  
+    [ "${QUIET}" -eq 0 ] && echo "" >&2
+}
+
+double_line() { 
+    [ "${QUIET}" -eq 0 ] && echo "==============================================================" >&2 
+} 
+
+STEP=1
+step_message() {
+    empty_line
+    double_line
+    [ "${QUIET}" -eq 0 ] && printf "${GREEN}%s.  %s${NC}\n" "$STEP" "$1" >&2
+    double_line
+    empty_line
+    STEP=$((STEP + 1))
+}
 
 # =============================================================================
 # is_installed() - Robust installation check
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Checks whether ciao is already installed, supporting both root
+# Checks whether this app is already installed, supporting both root
 # and normal user installations with safe fallbacks.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
@@ -88,7 +177,7 @@ success() { [ "${QUIET}" -eq 0 ] && printf "${GREEN}[OK]${NC} %s\n" "$*"; }
 is_installed() {
     : "${GLOBAL_BIN:=/usr/local/bin}"
     : "${USER_BIN:=${HOME}/.local/bin}"
-    : "${APP_NAME:=ciao}"
+    : "${APP_NAME:=springboot2}"
     : "${INSTALL_PATH:=${GLOBAL_BIN}/${APP_NAME}}"
 
     if [ -z "${IS_ROOT:-}" ]; then
@@ -122,7 +211,7 @@ is_installed() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Safely reads the VERSION constant from the installed ciao script.
+# Safely reads the VERSION constant from the installed this script.
 # Used by --version-check and --self-update.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
@@ -263,6 +352,9 @@ in_path() {
 # Adds ~/.local/bin to the user's shell configuration for bash, zsh, and fish.
 # Works even if the user is currently using a different shell.
 #
+# Using "~/.local/bin" instead of ${USER_BIN} without mapping to existing user 
+#   is the de facto standard, "~/.local/bin" is better then "/home/someone/.local/bin" inside ~/.bashrc 
+#
 # !!! DO NOT MODIFY OR SIMPLIFY !!!
 # =============================================================================
 
@@ -312,7 +404,7 @@ add_to_shell_path() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Downloads and installs ciao to the correct location (global or user-local).
+# Downloads and installs this to the correct location (global or user-local).
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # =============================================================================
@@ -399,7 +491,7 @@ perform_self_install() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Called when ciao is not installed. Shows helpful message and asks for confirmation.
+# Called when this script is not installed. Shows helpful message and asks for confirmation.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY !!!
 # =============================================================================
@@ -464,10 +556,8 @@ check_alpine_requirements() {
 # setup_sdkman()
 # =============================================================================
 setup_sdkman() {
-    info "Checking SDKMAN..."
-
+    step_message "Checking SDKMAN..."
     check_alpine_requirements
-
     if [ -d "${HOME}/.sdkman" ] && command -v sdk >/dev/null 2>&1; then
         info "SDKMAN already installed."
         return 0
@@ -493,6 +583,7 @@ setup_sdkman() {
 }
 
 setup_java() {
+    step_message "Setting up Java ..."
     info "Setting up Java 8 (Amazon Corretto)..."
     sdk install java "${JAVA_ID}" </dev/null || die "Java install failed"
     sdk default java "${JAVA_ID}" >/dev/null 2>&1
@@ -501,6 +592,7 @@ setup_java() {
 }
 
 setup_maven() {
+    step_message "Setting up Maven ..."
     info "Setting up Maven ${MAVEN_VER}..."
     sdk install maven "${MAVEN_VER}" </dev/null || die "Maven install failed"
     sdk default maven "${MAVEN_VER}" >/dev/null 2>&1
@@ -518,6 +610,8 @@ write_file_atomic() {
 }
 
 setup_springboot_project() {
+    step_message "Setting up Springboot ..."
+
     info "Preparing Spring Boot ${SPRINGBOOT_VER} demo → ${PROJECT_DIR}"
 
     if [ -d "${PROJECT_DIR}" ]; then
@@ -528,14 +622,14 @@ setup_springboot_project() {
     mkdir -p "${PROJECT_DIR}" || die "Cannot create project dir"
     cd "${PROJECT_DIR}" || die "cd failed"
 
-    write_file_atomic "pom.xml" <<'EOF'
+    write_file_atomic "pom.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.example</groupId>
-    <artifactId>hello-springboot2</artifactId>
+    <artifactId>${ARTIFACT_ID}</artifactId>
     <version>0.0.1</version>
     <packaging>jar</packaging>
     <parent>
@@ -545,7 +639,7 @@ setup_springboot_project() {
         <relativePath/>
     </parent>
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>${JAVA_VERSION}</java.version>
     </properties>
     <dependencies>
         <dependency>
@@ -565,7 +659,7 @@ setup_springboot_project() {
 EOF
 
     mkdir -p "src/main/java/com/example"
-    write_file_atomic "src/main/java/com/example/HelloApplication.java" <<'EOF'
+    write_file_atomic "src/main/java/com/example/HelloApplication.java" <<EOF
 package com.example;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -595,25 +689,27 @@ EOF
 }
 
 build_and_run() {
+    step_message "Building and running ..."
     info "Building project..."
     mvn clean package -DskipTests || {
         warn "Build failed."
         printf "Debug: cd \"%s\" && mvn clean package\n" "${PROJECT_DIR}"
         exit 1
     }
-
-    printf "\n==============================================================\n"
-    printf "  Spring Boot %s is starting...\n" "${SPRINGBOOT_VER}"
-    printf "  → Open: http://localhost:%s/\n" "${PORT}"
-    printf "  → Ctrl+C to stop\n"
-    printf "==============================================================\n\n"
-
+    empty_line
+    double_line
+    msg "  Spring Boot ${SPRINGBOOT_VER} is starting...\n"
+    msg "  → Open: http://localhost:${PORT}/\n"
+    msg "  → Ctrl+C to stop\n"
+    double_line
+    empty_line
+    empty_line
     exec java -jar "target/${JAR_NAME}"
 }
 
 show_help() {
     cat <<EOF
-${APP_NAME} v${APP_VER} — Spring Boot 2.7.x quick setup
+${APP_NAME} v${VERSION} — ${DESCRIPTION}
 
 Usage:
   ${APP_NAME}                 Setup + build + run
@@ -621,47 +717,84 @@ Usage:
   ${APP_NAME} version-check   Compare with latest
   ${APP_NAME} self-update     Update to latest
   ${APP_NAME} help            This help
+
+Options:
+  --version, -v       Show version information
+  --version-check     Compare installed version with latest on GitHub
+  --self-update       Update to the latest version from GitHub
+  --force, --reinstall Force reinstall / update
+  --quiet, -q         Suppress non-error output
+  --help, -h          Show this help message
+
 EOF
 }
 
-parse_arguments() {
-    COMMAND="run"
-    while [ $# -gt 0 ]; do
-        case "$1" in
-            help|--help|-h)                    COMMAND="help" ;;
-            version|--version)                 COMMAND="version" ;;
-            version-check|--version-check)     COMMAND="version-check" ;;
-            self-update|--self-update)         COMMAND="self-update" ;;
-            *) warn "Unknown argument: $1"; show_help; exit 1 ;;
-        esac
-        shift
-    done
-}
 
 main() {
     : "${HOME:=/root}"
     : "${GLOBAL_BIN:=/usr/local/bin}"
     : "${USER_BIN:=${HOME}/.local/bin}"
 
-    detect_install_locations
-    parse_arguments "$@"
+    # Default action
+    local cmd="run"
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --version|-v)
+                cmd="version"
+                ;;
+            --version-check)
+                cmd="version-check"
+                ;;
+            --self-update)
+                cmd="self-update"
+                ;;
+            --force|--reinstall)
+                FORCE_REINSTALL=1
+                ;;
+            --quiet|-q)
+                QUIET=1
+                ;;
+            --help|-h)
+                cmd="help"
+                ;;
+            --*)
+                error "Unknown option: $1"
+                printf "Try: %s --help\n" "$APP_NAME" >&2
+                exit 1
+                ;;
+            *)
+                error "Unknown argument: $1"
+                printf "Try: %s --help\n" "$APP_NAME" >&2
+                exit 1
+                ;;
+        esac
+        shift
+    done
+
+    # Special handling for version-check and self-update (can run even if not installed)
+    if [ "$cmd" = "version" ]; then
+        printf "%s version %s\n" "${APP_NAME}" "${VERSION}"
+        exit 0
+    fi
+
+
+    if [ "$cmd" = "self-update" ]; then
+        self_update
+        exit 0
+    fi
 
     if ! is_installed; then
         maybe_install
     fi
 
-    case "${COMMAND}" in
-        version)         printf "%s version %s\n" "${APP_NAME}" "${APP_VER}"; exit 0 ;;
+    case "${cmd}" in
         version-check)   version_check; exit 0 ;;
         self-update)     self_update; exit 0 ;;
         help)            show_help; exit 0 ;;
         run)             ;;
-        *)               die "Invalid command" ;;
+        *)               die "Invalid cmd" ;;
     esac
-
-    printf "\n==============================================================\n"
-    printf "  %s v%s  –  SDKMAN + Java 8 + Maven + Spring Boot 2.7\n" "${APP_NAME}" "${APP_VER}"
-    printf "==============================================================\n\n"
 
     setup_sdkman
     setup_java
