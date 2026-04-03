@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# springboot2 – version 1.10.0
+# springboot2 – version 1.11.0
 # =============================================================================
 #
 # One-command installer + launcher for Spring Boot 2.7.18
@@ -86,9 +86,10 @@
 # ----------------------------- Project Constants -----------------------------
 
 APP_NAME="springboot2"
-VERSION="1.10.0"
+VERSION="1.11.0"
 DESCRIPTION="Spring Boot 2.7.18 quick setup"
 REMOTE_VERSION=$VERSION
+SH=bash
 
 REPO_USER="Wilgat"
 REPO_NAME="springboot2"
@@ -174,8 +175,12 @@ step_message() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Checks whether the script is already installed, supporting both root
+# Checks whether the program is already installed, supporting both root
 # and normal user installations with safe fallbacks.
+#
+# Please don't modify this code for root-only installed
+# You can check [ "$(id -u)" -eq 0 ] before calling / excuting 
+#   this function
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # =============================================================================
@@ -185,14 +190,15 @@ is_installed() {
     : "${USER_BIN:=${HOME}/.local/bin}"
     : "${INSTALL_PATH:=${GLOBAL_BIN}/${APP_NAME}}"
 
-    if [ -z "${IS_ROOT:-}" ]; then
-        if [ "$(id -u)" -eq 0 ]; then
-            IS_ROOT=1
-        else
-            IS_ROOT=0
-        fi
+    if [ "$(id -u)" -eq 0 ]; then
+        IS_ROOT=1
+        INSTALL_PATH="${GLOBAL_BIN}/${APP_NAME}"
+    else
+        IS_ROOT=0
+        INSTALL_PATH="${USER_BIN}/${APP_NAME}"
     fi
 
+    # Support explicit parameters or force flags
     if [ "${1:-}" = "--user" ] || [ "${FORCE_USER:-0}" -eq 1 ]; then
         [ -f "${USER_BIN}/${APP_NAME}" ] && [ -x "${USER_BIN}/${APP_NAME}" ] && return 0
         return 1
@@ -201,6 +207,7 @@ is_installed() {
         return 1
     fi
 
+    # Main logic
     if [ "$IS_ROOT" -eq 1 ]; then
         [ -f "${INSTALL_PATH}" ] && [ -x "${INSTALL_PATH}" ]
     else
@@ -218,12 +225,10 @@ is_installed() {
 # Used by --version-check and --self-update.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
-# Designed to be reusable in other Wilgat projects.
+# Designed to be reusable in other projects.
 # =============================================================================
-
 get_installed_version() {
     local bin_path
-
     if [ "$IS_ROOT" -eq 1 ] || [ -x "${GLOBAL_BIN}/${APP_NAME}" ]; then
         bin_path="${GLOBAL_BIN}/${APP_NAME}"
     else
@@ -246,6 +251,7 @@ get_installed_version() {
 # If not installed and running in interactive terminal, it suggests installation.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# Designed to be reusable in other projects.
 # =============================================================================
 
 version_check() {
@@ -282,6 +288,7 @@ version_check() {
 # Respects --force and --quiet.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# Designed to be reusable in other projects.
 # =============================================================================
 
 self_update() {
@@ -320,6 +327,7 @@ self_update() {
 # POSIX-compatible using case statement (works in sh/dash/bash/zsh).
 #
 # !!! DO NOT MODIFY OR SIMPLIFY !!!
+# Designed to be reusable in other projects.
 # =============================================================================
 
 in_path() {
@@ -338,6 +346,7 @@ in_path() {
 # Works even if the user is currently using a different shell.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY !!!
+# Designed to be reusable in other projects.
 # =============================================================================
 
 add_to_shell_path() {
@@ -404,12 +413,29 @@ add_to_shell_path() {
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Downloads and installs ciao to the correct location (global or user-local).
+# Downloads and installs the script to the correct location (global or user-local).
+#
+# Please don't modify this code for root-only installed
+# You can check [ "$(id -u)" -eq 0 ] before calling / executing 
+#   this function
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# Designed to be reusable in other projects.
 # =============================================================================
 
 perform_self_install() {
+    : "${GLOBAL_BIN:=/usr/local/bin}"
+    : "${USER_BIN:=${HOME}/.local/bin}"
+    : "${INSTALL_PATH:=${GLOBAL_BIN}/${APP_NAME}}"
+
+    if [ "$(id -u)" -eq 0 ]; then
+        IS_ROOT=1
+        INSTALL_PATH="${GLOBAL_BIN}/${APP_NAME}"
+    else
+        IS_ROOT=0
+        INSTALL_PATH="${USER_BIN}/${APP_NAME}"
+    fi
+
     if [ -z "$REMOTE_VERSION" ]; then
         REMOTE_VERSION=${VERSION}
     fi
@@ -420,11 +446,17 @@ perform_self_install() {
         return 0
     fi
 
-    INSTALL_PATH="${GLOBAL_BIN}/${APP_NAME}"
-
-    if ! mkdir -p "${GLOBAL_BIN}" 2>/dev/null; then
-        error "Failed to create ${GLOBAL_BIN}"
-        return 1
+    # Create correct target directory (root vs user)
+    if [ "$IS_ROOT" -eq 1 ]; then
+        if ! mkdir -p "${GLOBAL_BIN}" 2>/dev/null; then
+            error "Failed to create ${GLOBAL_BIN}"
+            return 1
+        fi
+    else
+        if ! mkdir -p "${USER_BIN}" 2>/dev/null; then
+            error "Failed to create ${USER_BIN}"
+            return 1
+        fi
     fi
 
     local tmp_file
@@ -462,19 +494,24 @@ perform_self_install() {
         return 1
     fi
 
+    # Add ~/.local/bin to PATH for normal user installs
+    if [ "$IS_ROOT" -eq 0 ]; then
+        add_to_shell_path
+    fi
+    
     success "${APP_NAME} ${REMOTE_VERSION} successfully installed to ${INSTALL_PATH}"
     return 0
 }
-
 
 # =============================================================================
 # maybe_install() - Friendly installation prompt
 # =============================================================================
 #
 # GENERAL PURPOSE:
-# Called when ciao is not installed. Shows helpful message and asks for confirmation.
+# Called when the program is not installed. Shows helpful message and asks for confirmation.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY !!!
+# Designed to be reusable in other projects.
 # =============================================================================
 
 maybe_install() {
@@ -488,15 +525,16 @@ maybe_install() {
     printf "Recommended installation command:\n\n"
 
     if [ "$IS_ROOT" -eq 1 ]; then
-        printf "     ${GREEN}sudo curl -fsSL %s | sudo sh${NC}\n" "$SCRIPT_URL"
+        printf "     ${GREEN}sudo curl -fsSL %s | sudo ${SH}${NC}\n" "$SCRIPT_URL"
     else
-        printf "     ${GREEN}curl -fsSL %s | sh${NC}\n" "$SCRIPT_URL"
+        printf "     ${GREEN}curl -fsSL %s | ${SH}${NC}\n" "$SCRIPT_URL"
     fi
     printf "\n"
 
     local should_install=false
 
     if [ -t 0 ] && [ -t 1 ]; then
+        # Interactive terminal
         printf "     Install now? (y/N): "
         read -r answer || true
         case "$answer" in
@@ -504,24 +542,40 @@ maybe_install() {
             *) printf "Installation skipped by user.\n"; return 0 ;;
         esac
     else
+        # Non-interactive (curl | sh, curl | bash, scripts, CI, etc.)
         printf "${YELLOW}Non-interactive mode detected → installing automatically...${NC}\n"
         should_install=true
     fi
 
     if [ "$should_install" = "true" ]; then
         perform_self_install
+        exit 0
     fi
 }
 
+# =============================================================================
+# check_alpine_requirements() - Alpine Linux bash requirement check
+# =============================================================================
+#
+# GENERAL PURPOSE:
+# Checks if running on Alpine Linux and ensures bash is installed (required by SDKMAN!).
+# Shows clear instructions if bash is missing.
+#
+# This function is reused across multiple projects.
+# It respects the ${SH} variable set at the top of the script.
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# Designed to be reusable in other projects.
+# =============================================================================
 check_alpine_requirements() {
-    if [ -f "/etc/alpine-release" ]; then
+    if [ -f "/etc/alpine-release" ] && [ "${SH}" = "bash" ]; then
         info "Alpine Linux detected."
-        if ! command -v bash >/dev/null 2>&1; then
-            warn "bash is required for SDKMAN! on Alpine Linux."
-            printf "\nPlease install bash first:\n"
-            printf "    ${GREEN}apk add bash${NC}\n\n"
+        if ! command -v ${SH} >/dev/null 2>&1; then
+            warn "${SH} is required for SDKMAN! on Alpine Linux."
+            printf "\nPlease install ${SH} first:\n"
+            printf "    ${GREEN}apk add ${SH}${NC}\n\n"
             printf "Then re-run this script with:\n"
-            printf "    ${GREEN}bash <(curl -fsSL ${SCRIPT_URL})${NC}\n"
+            printf "    ${GREEN}${SH} <(curl -fsSL ${SCRIPT_URL})${NC}\n"
             exit 1
         fi
     fi
@@ -720,9 +774,6 @@ EOF
 # =============================================================================
 build_and_run() {
     step_message "Building and running ..."
-
-    : "${PROJECT_DIR:=${HOME}/springboot-springboot2}"
-    : "${JAR_NAME:=hello-springboot2-0.0.1.jar}"
 
     info "Building project with Maven..."
 

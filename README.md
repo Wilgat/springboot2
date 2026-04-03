@@ -1,6 +1,6 @@
 # springboot2
 
-<img src="https://img.shields.io/badge/Version-1.10.0-blue?style=flat-square" alt="Version">  
+<img src="https://img.shields.io/badge/Version-1.11.0-blue?style=flat-square" alt="Version">  
 <img src="https://img.shields.io/badge/Java-8-orange?style=flat-square&logo=openjdk" alt="Java 8">  
 <img src="https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen?style=flat-square&logo=springboot" alt="Spring Boot 2.7.18">  
 <img src="https://img.shields.io/badge/Maven-3.9.14-red?style=flat-square&logo=apachemaven" alt="Maven 3.9.14">  
@@ -19,7 +19,7 @@
 - Supports both **user** (`~/.local/bin`) and **system** (`/usr/local/bin`) installation
 - Automatically installs SDKMAN! + pinned Java 8 Amazon Corretto + Maven 3.9.14
 - Creates a clean minimal Spring Boot 2.7.18 "Hello World" project
-- **New in 1.10.0**: Project preservation by default — re-runs keep your existing files (use `--force` to reset)
+- **New in 1.11.0**: Project preservation by default — re-runs keep your existing files (use `--force` to reset)
 - Self-installing, self-updating (`--self-update`), and version checking
 - `--force` / `--reinstall`, `--quiet` support
 - Multi-shell PATH setup (bash, zsh, fish)
@@ -59,7 +59,7 @@ springboot2 self-update        # Update to latest version
 springboot2 help               # Show detailed help
 ```
 
-### New Behavior in v1.10.0
+### New Behavior in v1.11.0
 - **Normal run**: Preserves your existing project folder, `pom.xml`, Java source, and `application.properties` (great for repeated testing or manual edits).
 - **`--force` / `--reinstall`**: Completely wipes and regenerates the project for a clean slate.
 
@@ -124,7 +124,7 @@ The script is intentionally kept **linear**, highly readable, and **extremely de
 │   • setup_java()                                            │
 │   • setup_maven()                                           │
 ├─────────────────────────────────────────────────────────────┤
-│  Project Management (New in 1.10.0)                          │
+│  Project Management (New in 1.11.0)                          │
 │   • setup_springboot_project()                              │
 │        ├── Preserves project by default                     │
 │        └── Full reset with --force / --reinstall            │
@@ -147,7 +147,7 @@ The script is intentionally kept **linear**, highly readable, and **extremely de
 - **Linear flow** — easy to read top-to-bottom even for beginners.
 - **Heavy defensiveness** — every critical section has repeated safe defaults, redundant checks, and loud protective comments (`!!! DO NOT MODIFY OR SIMPLIFY !!!`).
 - **Separation of concerns** — installation logic, SDKMAN setup, project management, and runtime are clearly separated.
-- **Project preservation logic** (introduced in 1.10.0) is highlighted because it changes how users interact with the tool on repeated runs.
+- **Project preservation logic** (introduced in 1.11.0) is highlighted because it changes how users interact with the tool on repeated runs.
 
 This design makes the script:
 - Survive harsh environments (`curl | bash`, Alpine, Git Bash, non-interactive shells…)
