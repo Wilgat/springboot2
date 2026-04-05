@@ -1,15 +1,15 @@
 # springboot2
 
-<img src="https://img.shields.io/badge/Version-1.11.0-blue?style=flat-square" alt="Version">  
+<img src="https://img.shields.io/badge/Version-2.0.0-blue?style=flat-square" alt="Version">  
 <img src="https://img.shields.io/badge/Java-8-orange?style=flat-square&logo=openjdk" alt="Java 8">  
 <img src="https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen?style=flat-square&logo=springboot" alt="Spring Boot 2.7.18">  
 <img src="https://img.shields.io/badge/Maven-3.9.14-red?style=flat-square&logo=apachemaven" alt="Maven 3.9.14">  
 <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License">
 
-**The friendliest way to run Spring Boot 2.7.18 in one command.**
+**The friendliest way to run and maintain Spring Boot 2.7.18 projects.**
 
-> A robust, extremely defensive **Bash** script that installs SDKMAN!, Java 8 (Amazon Corretto), Maven, and instantly creates (or re-uses) + runs a minimal Spring Boot 2.7.18 application.  
-> Part of the Wilgat defensive tool family (aligned with [ciao](https://github.com/Wilgat/ciao)).
+> A robust, extremely defensive Bash script that installs SDKMAN!, Java 8 (Amazon Corretto), Maven, and reliably sets up/runs Spring Boot 2.7.18 applications — with strong project preservation by default.  
+> Part of the Wilgat defensive tool family (aligned with [pomo](https://github.com/Wilgat/pomo) and [ciao](https://github.com/Wilgat/ciao)).
 
 ---
 
@@ -17,11 +17,14 @@
 
 - One-liner install (`curl | bash`)
 - Supports both **user** (`~/.local/bin`) and **system** (`/usr/local/bin`) installation
-- Automatically installs SDKMAN! + pinned Java 8 Amazon Corretto + Maven 3.9.14
-- Creates a clean minimal Spring Boot 2.7.18 "Hello World" project
-- **New in 1.11.0**: Project preservation by default — re-runs keep your existing files (use `--force` to reset)
-- Self-installing, self-updating (`--self-update`), and version checking
-- `--force` / `--reinstall`, `--quiet` support
+- Automatically installs SDKMAN! + pinned Java 8 (Amazon Corretto) + Maven 3.9.14
+- Creates or re-uses a minimal Spring Boot 2.7.18 project
+- **Project preservation by default** — repeated runs keep your changes (`--reset` to start fresh)
+- Full support for existing legacy projects via `--project-dir`
+- New commands: `status`, `about` (with rich diagnostics)
+- `--no-run` flag for CI / Docker environments
+- `--json` + `--quiet` support for scripting and diagnostics
+- Self-installing, self-updating, and version checking
 - Multi-shell PATH setup (bash, zsh, fish)
 - Extremely defensive coding style with repeated safe defaults
 
@@ -34,7 +37,7 @@
 curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | bash
 ```
 
-**System-wide (root):**
+**System-wide (requires root):**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2 | sudo bash
 ```
@@ -44,39 +47,51 @@ After installation, simply run:
 springboot2
 ```
 
-The app will be available at **http://localhost:8080**
+The application will be available at **http://localhost:8080**
 
 ---
 
 ## 📖 Usage
 
 ```bash
-springboot2                    # Setup + build + run (preserves project by default)
-springboot2 --force            # Full reset: delete and regenerate project files
-springboot2 version            # Show current version
-springboot2 version-check      # Compare with latest on GitHub
-springboot2 self-update        # Update to latest version
-springboot2 help               # Show detailed help
+springboot2                          # Setup + build + run (preserves project by default)
+springboot2 --reset                  # Full reset: delete and regenerate project
+springboot2 --project-dir <path>     # Work with an existing legacy project
+springboot2 --no-run                 # Setup only (no build/run) — useful for CI/Docker
+springboot2 status                   # Show if the app is running
+springboot2 about                    # Full diagnostics (Java, Maven, project, etc.)
+springboot2 about --json             # Machine-readable diagnostics
+springboot2 version
+springboot2 version-check
+springboot2 self-update
+springboot2 help
 ```
 
-### New Behavior in v1.11.0
-- **Normal run**: Preserves your existing project folder, `pom.xml`, Java source, and `application.properties` (great for repeated testing or manual edits).
-- **`--force` / `--reinstall`**: Completely wipes and regenerates the project for a clean slate.
+### Key Behaviors
+
+- **Normal run**: Preserves your existing project folder, `pom.xml`, source code, and `application.properties`.
+- **`--reset`**: Completely wipes and regenerates the project (replaces old `--force`).
+- **`--project-dir`**: Point to any existing Spring Boot 2.7 project.
+- **`--no-run`**: Only sets up the environment and project — does not build or start the app.
 
 ---
 
-## Important Platform Notes
+## Important Notes (2026)
+
+Spring Boot 2.7.18 is the **final OSS release** of the 2.7 series (OSS support ended in 2023).  
+Commercial support continues until the end of 2026.  
+This tool is designed specifically for **legacy project maintenance**.
+
+---
+
+## Platform Notes
 
 ### Alpine Linux
 Requires **bash** (SDKMAN! does not work reliably under BusyBox ash).  
-The script auto-detects Alpine and gives clear instructions:
-```bash
-apk add bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2)
-```
+The script auto-detects Alpine and shows clear instructions.
 
-### macOS, Git Bash (Windows), and other Linux distributions
-Fully supported with defensive fallbacks for SDKMAN! sourcing and PATH setup.
+### Other Platforms
+Fully supported on macOS, Git Bash (Windows), Ubuntu, Rocky Linux, etc., with defensive fallbacks.
 
 ---
 
@@ -85,101 +100,28 @@ Fully supported with defensive fallbacks for SDKMAN! sourcing and PATH setup.
 | Platform                  | Status       | Notes |
 |---------------------------|--------------|-------|
 | **Alpine Linux**          | Good         | Requires `apk add bash` |
-| **Git Bash (Windows)**    | Good         | Defensive `chmod` handling |
+| **Git Bash (Windows)**    | Good         | Defensive handling |
 | **Ubuntu / Debian**       | Excellent    | Default bash |
 | **Rocky / RHEL / CentOS** | Excellent    | No issues |
-| **macOS (bash/zsh)**      | Good         | Supports official SDKMAN!, Homebrew, etc. |
+| **macOS (bash/zsh)**      | Good         | Full support |
 
 ---
 
-## Program Structure (for curious people)
+## Why the Defensive Style?
 
-The script is intentionally kept **linear**, highly readable, and **extremely defensive** following the strict "ciao" coding style.
+This script follows the strict **Wilgat defensive coding style** (same as `pomo`, `countdown`, and `ciao`):
+- Repeated safe defaults and redundant checks
+- Heavy protective comments (`!!! DO NOT MODIFY OR SIMPLIFY !!!`)
+- Flag-first parsing and single source of truth for output
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Header + Warnings + Project Constants                      │
-│  (APP_NAME, VERSION, SCRIPT_URL, JAVA_ID, etc.)             │
-├─────────────────────────────────────────────────────────────┤
-│  Safe Variable Defaults (repeated on purpose)               │
-│  Root Detection (IS_ROOT)                                   │
-│  Force Flags & Quiet Mode                                   │
-├─────────────────────────────────────────────────────────────┤
-│  Color Output + Logging Functions (die, info, warn, etc.)   │
-├─────────────────────────────────────────────────────────────┤
-│  Core Utility Functions                                     │
-│   • is_installed()            ← robust install detection    │
-│   • get_installed_version()                                 │
-│   • version_check()                                         │
-│   • self_update()                                           │
-│   • in_path() + add_to_shell_path()                         │
-├─────────────────────────────────────────────────────────────┤
-│  Installation Logic                                         │
-│   • perform_self_install()    ← heart of self-install       │
-│   • maybe_install()           ← interactive + auto-install  │
-├─────────────────────────────────────────────────────────────┤
-│  SDKMAN + Java + Maven Setup                                │
-│   • check_alpine_requirements()                             │
-│   • setup_sdkman()                                          │
-│   • setup_java()                                            │
-│   • setup_maven()                                           │
-├─────────────────────────────────────────────────────────────┤
-│  Project Management (New in 1.11.0)                          │
-│   • setup_springboot_project()                              │
-│        ├── Preserves project by default                     │
-│        └── Full reset with --force / --reinstall            │
-├─────────────────────────────────────────────────────────────┤
-│  Build & Run                                                │
-│   • build_and_run()           ← ultra-defensive build + exec│
-├─────────────────────────────────────────────────────────────┤
-│  Help & Main Entry Point                                    │
-│   • show_spring2_help()                                     │
-│   • main()                                                  │
-│        ├── Argument parsing                                 │
-│        ├── Special handlers (--version, --self-update, etc.)│
-│        ├── maybe_install() if needed                        │
-│        └── Full setup flow                                  │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Why this structure?
-
-- **Linear flow** — easy to read top-to-bottom even for beginners.
-- **Heavy defensiveness** — every critical section has repeated safe defaults, redundant checks, and loud protective comments (`!!! DO NOT MODIFY OR SIMPLIFY !!!`).
-- **Separation of concerns** — installation logic, SDKMAN setup, project management, and runtime are clearly separated.
-- **Project preservation logic** (introduced in 1.11.0) is highlighted because it changes how users interact with the tool on repeated runs.
-
-This design makes the script:
-- Survive harsh environments (`curl | bash`, Alpine, Git Bash, non-interactive shells…)
-- Resist accidental simplification by AI tools or contributors
-- Serve as a reusable template for other defensive tools in the Wilgat family
-
----
-
-## Why the Heavy Defensive Style?
-
-This project strictly follows the **ciao defensive coding style**:
-- Repeated safe defaults (`: "${VAR:=default}"`)
-- Redundant root / environment checks
-- Heavy inline comments and `!!! DO NOT MODIFY OR SIMPLIFY !!!` blocks
-
-**Purpose**:
-- Survive harsh environments (`curl | bash`, non-interactive shells, missing `$HOME`, Alpine ash, Git Bash, etc.)
-- Protect against accidental "cleaning" by AI assistants or contributors
-- Serve as a reliable template for other Wilgat tools
-
----
-
-## Project Philosophy
-
-> "Write code that is easy to copy, hard to break, and self-documenting."
+**Purpose**: Survive harsh environments (`curl | bash`, non-interactive shells, missing `$HOME`, Alpine, Git Bash, etc.) and resist accidental simplification.
 
 ---
 
 ## Contributing
 
-Please respect the strict defensive coding style and protective comments.  
-Any changes should maintain the ultra-defensive approach.
+Contributions are welcome, but **please preserve the defensive style** and protective comments.  
+Any changes should maintain reliability in edge cases.
 
 ---
 
@@ -194,4 +136,4 @@ MIT
 
 ---
 
-**Note**: Spring Boot 2.7.18 is the final OSS release of the 2.7 series (OSS support ended in 2023). Commercial support is available until the end of 2026. This tool is designed for maintenance of existing legacy projects.
+**Note**: This tool is intended for maintenance of existing Spring Boot 2.7.18 projects. For new projects, consider newer Spring Boot versions.
