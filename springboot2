@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# springboot2 – version 1.12.0
+# springboot2 – version .13.0
 # =============================================================================
 #
 # One-command installer + launcher for Spring Boot 2.7.18
@@ -85,7 +85,7 @@
 
 # ----------------------------- Project Constants -----------------------------
 APP_NAME="springboot2"
-VERSION="1.12.0"
+VERSION=".13.0"
 DESCRIPTION="Spring Boot 2.7.18 quick setup"
 REMOTE_VERSION=$VERSION
 SH=bash
@@ -464,7 +464,7 @@ is_installed() {
 #
 # GENERAL PURPOSE:
 # Safely reads the VERSION constant from the installed script.
-# Used by --version-check and --self-update.
+# Used by version-check and self-update.
 #
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # Designed to be reusable in other projects.
@@ -1354,38 +1354,9 @@ build_and_run() {
     fi
 }
 
-# =============================================================================
-# Updated help with --force behavior
-# =============================================================================
-show_spring2_help() {
-    cat <<EOF
-${APP_NAME} v${VERSION} — ${DESCRIPTION}
-
-Usage:
-  ${APP_NAME}                    Setup + build + run (preserves project on re-run)
-  ${APP_NAME} --force            Full reset: delete & regenerate project files
-  ${APP_NAME} version            Show version
-  ${APP_NAME} version-check      Compare with latest
-  ${APP_NAME} self-update        Update to latest
-  ${APP_NAME} help               This help
-
-Options:
-  --version, -v        Show version information
-  --version-check      Compare installed version with latest on GitHub
-  --self-update        Update to the latest version from GitHub
-  --force, --reinstall Force full reinstall (deletes and regenerates project)
-  --quiet, -q          Suppress non-error output
-  --help, -h           Show this help message
-
-Behavior:
-  • Normal run: Preserves existing project folder and source files for repeated use
-  • With --force: Completely resets the project (clean rebuild)
-
-EOF
-}
 
 # =============================================================================
-# show_spring2_help() - Display help information for the app
+# show_spring_boot_help() - Display help information for the app
 # =============================================================================
 #
 # Shows usage, available commands, options, and important legacy notes.
@@ -1397,7 +1368,7 @@ EOF
 # This is the user-facing help text and should be kept in sync with the README.md.
 # =============================================================================
 
-show_spring2_help() {
+show_spring_boot_help() {
     if [ "${JSON}" -eq 1 ]; then
         # JSON mode: return clean, machine-friendly response
         output_json "success" "" \
@@ -1425,11 +1396,12 @@ Usage:
   ${APP_NAME} --no-run                 Setup only (no build/run) — useful for CI/Docker
   ${APP_NAME} status                   Show application status
   ${APP_NAME} about                    Full diagnostics (Java, Maven, project, etc.)
-  ${APP_NAME} about --json             Machine-readable diagnostics
-  ${APP_NAME} version
-  ${APP_NAME} version-check
-  ${APP_NAME} self-update
-  ${APP_NAME} help
+  ${APP_NAME} version                  Show version
+  ${APP_NAME} version-check            Compare with latest
+  ${APP_NAME} self-update              Update to latest version
+  ${APP_NAME} self-uninstall           Remove timer from the system
+  ${APP_NAME} reinstall                Force reinstall
+  ${APP_NAME} help                     This help
 
 Options:
   --project-dir <path>   Use custom project directory (default: ~/springboot-${APP_NAME})
@@ -1437,7 +1409,7 @@ Options:
   --no-run               Setup environment and project only, skip build & run
   --quiet, -q            Suppress non-error messages
   --json                 Machine-readable JSON output (implies --quiet)
-  --help, -h             Show this help
+ 
 
 Important Notes:
   • Normal run preserves your existing project files, pom.xml, and source code.
@@ -1458,10 +1430,16 @@ EOF
 # main_spring_boot_app() - Main dispatcher (updated for v2.0)
 # =============================================================================
 #
+# IMPORTANT:
+# This main() function is intentionally kept as the single entry point and
+# command dispatcher. All business logic lives in dedicated functions
+#
 # Flag-first parsing for clean support of --project-dir, --no-run, --quiet, --json, etc.
 # Preserves the critical auto-install behavior for `curl | bash`.
 #
 # !!! DO NOT REMOVE OR SIMPLIFY THE AUTO-INSTALL BLOCK !!!
+# It serves as a strong reminder for future maintenance (including when AI
+# assistants try to "clean up" the code).
 # =============================================================================
 
 main_spring_boot_app() {
@@ -1509,16 +1487,19 @@ main_spring_boot_app() {
                 JSON=1
                 QUIET=1
                 ;;
-            --version|-v)
+            version|-v)
                 COMMAND="version"
                 ;;
-            --version-check)
+            version-check)
                 COMMAND="version-check"
                 ;;
-            --self-update)
+            self-update)
                 COMMAND="self-update"
                 ;;
-            --help|-h)
+            self-uninstall)
+                COMMAND="self-uninstall"
+                ;;
+            help|-h)
                 COMMAND="help"
                 ;;
             about)
@@ -1529,7 +1510,7 @@ main_spring_boot_app() {
                     output_json_error "Unknown argument: $1" "bad_argument"
                 else
                     error "Unknown argument: $1"
-                    printf "Run '%s --help' for usage.\n" "${APP_NAME}" >&2
+                    printf "Run '%s help' for usage.\n" "${APP_NAME}" >&2
                 fi
                 exit 1
                 ;;
@@ -1558,13 +1539,17 @@ main_spring_boot_app() {
             exit 0
             ;;
 
+        self-uninstall)
+            self_uninstall
+            exit 0 ;;
+
         about)
             show_about_spring_boot_app
             exit 0
             ;;
 
         help)
-            show_spring2_help
+            show_spring_boot_help
             exit 0
             ;;
 
