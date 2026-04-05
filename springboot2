@@ -982,11 +982,11 @@ maybe_install() {
 }
 
 # =============================================================================
-# show_about_springboot2() - Full diagnostics for springboot2 (v2.0 style)
+# show_about_spring_boot_app() - Full diagnostics for the app 
 # =============================================================================
 #
 # Provides comprehensive environment and status information:
-#   - Installation status of springboot2
+#   - Installation status of the app
 #   - SDKMAN status
 #   - Java and Maven versions
 #   - Project directory status
@@ -998,7 +998,7 @@ maybe_install() {
 # !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
 # =============================================================================
 
-show_about_springboot2() {
+show_about_spring_boot_app() {
     if [ "${JSON}" -eq 1 ]; then
         # === JSON MODE - Clean machine output ===
         local installed="false"
@@ -1385,20 +1385,7 @@ EOF
 }
 
 # =============================================================================
-# show_spring_help() - Display help information for pomo
-# =============================================================================
-#
-# Shows usage, available commands, examples, and theme information.
-# Fully respects --quiet and --json modes.
-#
-# In --json mode: returns a minimal success object instead of long text.
-# In --quiet mode: prints nothing (silent).
-#
-# This is the user-facing help text and should be kept in sync with the README.md.
-# =============================================================================
-
-# =============================================================================
-# show_spring2_help() - Display help information for springboot2
+# show_spring2_help() - Display help information for the app
 # =============================================================================
 #
 # Shows usage, available commands, options, and important legacy notes.
@@ -1426,26 +1413,26 @@ show_spring2_help() {
         return 0
     fi
 
-    cat << 'EOF'
-springboot2 v${VERSION} — Spring Boot 2.7.18 Quick Setup & Runner
+    cat << EOF
+${APP_NAME} v${VERSION} — Spring Boot 2.7.18 Quick Setup & Runner
 
 The friendliest way to run and maintain Spring Boot 2.7.18 projects.
 
 Usage:
-  springboot2                          Setup environment + build + run (preserves project)
-  springboot2 --reset                  Full reset: delete and regenerate project files
-  springboot2 --project-dir <path>     Run against an existing legacy project
-  springboot2 --no-run                 Setup only (no build/run) — useful for CI/Docker
-  springboot2 status                   Show application status
-  springboot2 about                    Full diagnostics (Java, Maven, project, etc.)
-  springboot2 about --json             Machine-readable diagnostics
-  springboot2 version
-  springboot2 version-check
-  springboot2 self-update
-  springboot2 help
+  ${APP_NAME}                          Setup environment + build + run (preserves project)
+  ${APP_NAME} --reset                  Full reset: delete and regenerate project files
+  ${APP_NAME} --project-dir <path>     Run against an existing legacy project
+  ${APP_NAME} --no-run                 Setup only (no build/run) — useful for CI/Docker
+  ${APP_NAME} status                   Show application status
+  ${APP_NAME} about                    Full diagnostics (Java, Maven, project, etc.)
+  ${APP_NAME} about --json             Machine-readable diagnostics
+  ${APP_NAME} version
+  ${APP_NAME} version-check
+  ${APP_NAME} self-update
+  ${APP_NAME} help
 
 Options:
-  --project-dir <path>   Use custom project directory (default: ~/springboot-springboot2)
+  --project-dir <path>   Use custom project directory (default: ~/springboot-${APP_NAME})
   --reset                Force full project reset (deletes and regenerates everything)
   --no-run               Setup environment and project only, skip build & run
   --quiet, -q            Suppress non-error messages
@@ -1458,17 +1445,17 @@ Important Notes:
     This tool is intended for legacy maintenance and commercial support environments.
 
 Examples:
-  springboot2                              # Normal run (recommended)
-  springboot2 --project-dir /my/old/project
-  springboot2 --no-run                     # Prepare for Docker/CI
-  springboot2 --reset                      # Clean slate
-  springboot2 about --json
+  ${APP_NAME}                              # Normal run (recommended)
+  ${APP_NAME} --project-dir /my/old/project
+  ${APP_NAME} --no-run                     # Prepare for Docker/CI
+  ${APP_NAME} --reset                      # Clean slate
+  ${APP_NAME} about --json
 
 EOF
 }
 
 # =============================================================================
-# main_springboot2() - Main dispatcher (updated for v2.0)
+# main_spring_boot_app() - Main dispatcher (updated for v2.0)
 # =============================================================================
 #
 # Flag-first parsing for clean support of --project-dir, --no-run, --quiet, --json, etc.
@@ -1477,7 +1464,7 @@ EOF
 # !!! DO NOT REMOVE OR SIMPLIFY THE AUTO-INSTALL BLOCK !!!
 # =============================================================================
 
-main_springboot2() {
+main_spring_boot_app() {
     # Safe defaults (repeated on purpose - defensive style)
     : "${HOME:=/root}"
     : "${GLOBAL_BIN:=/usr/local/bin}"
@@ -1572,7 +1559,7 @@ main_springboot2() {
             ;;
 
         about)
-            show_about_springboot2
+            show_about_spring_boot_app
             exit 0
             ;;
 
@@ -1614,4 +1601,4 @@ main_springboot2() {
 }
 
 # Call the main function
-main_springboot2 "$@"
+main_spring_boot_app "$@"
