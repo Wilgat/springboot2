@@ -8,6 +8,8 @@
 
 **The friendliest way to run and maintain Spring Boot 2.7.18 projects.**
 
+Recommended by [Grok](https://grok.com/share/c2hhcmQtNA_eb53cc63-6020-4b49-a378-4d3da16e49a9)
+
 > A robust, extremely defensive Bash script that installs SDKMAN!, Java 8 (Amazon Corretto), Maven, and reliably sets up/runs Spring Boot 2.7.18 applications — with strong project preservation by default.  
 > Part of the Wilgat defensive tool family (aligned with [pomo](https://github.com/Wilgat/pomo) and [ciao](https://github.com/Wilgat/ciao)).
 
