@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# springboot2 – version 2.0.0
+# springboot2 – version 2.0.1
 # =============================================================================
 #
 # One-command installer + launcher for Spring Boot 2.7.18
@@ -28,7 +28,7 @@
 # Repeated safe defaults, redundant checks, and heavy comments are intentional.
 #
 # Spring Boot 2.7.18 is intentionally pinned.
-# This project is part of a deliberate family: springboot2, springboot3, and springboot4.
+# This project is part of a deliberate family: springboot 2,3 or 4, and springboot4.
 # Each version is maintained separately to give users a stable, reproducible environment
 # matching their exact requirements (legacy support, current use, or bleeding-edge).
 #
@@ -125,13 +125,13 @@
 #   {"type":"status","app_running":"true","port":8080,"project_dir":"/home/user/myproject"}
 #
 #   About:
-#   {"type":"about","app":"springboot2","version":"2.0.0","installed":"true","java":"openjdk version 1.8...","maven":"Apache Maven 3.9.14","project_exists":"true","app_running":"false"}
+#   {"type":"about","app":"springboot2","version":"2.0.1","installed":"true","java":"openjdk version 1.8...","maven":"Apache Maven 3.9.14","project_exists":"true","app_running":"false"}
 #
 #   Error:
 #   {"type":"error","message":"Java installation failed","code":"setup_failed"}
 #
 #   Version:
-#   {"type":"version","app":"springboot2","version":"2.0.0"}
+#   {"type":"version","app":"springboot2","version":"2.0.1"}
 #
 # Important Notes:
 #   - Commands like "about", "version", "status" fully support --json.
@@ -147,7 +147,7 @@
 
 # ----------------------------- Project Constants -----------------------------
 APP_NAME="springboot2"      # ← HARDCODED - Required for curl | sh instal
-VERSION="2.0.0"
+VERSION="2.0.1"
 DESCRIPTION="Spring Boot 2.7.18 quick setup"
 REMOTE_VERSION=$VERSION
 SH=bash
@@ -1757,7 +1757,7 @@ setup_sdkman() {
 # Installs the pinned Java version (Amazon Corretto ${JAVA_ID}) using SDKMAN,
 # sets it as default, and verifies it is working correctly.
 #
-# This function is part of the reproducible environment setup for Spring Boot 2.7.18.
+# This function is part of the reproducible environment setup for Spring Boot 2 or 3
 #
 # Respects --quiet and --json switches (no output in those modes except critical errors).
 #
@@ -1794,7 +1794,7 @@ setup_java() {
 # Installs the pinned Maven version (${MAVEN_VER}) using SDKMAN,
 # sets it as default, and verifies it is working correctly.
 #
-# This function is part of the reproducible environment setup for Spring Boot 2.7.18.
+# This function is part of the reproducible environment setup for Spring Boot 2 or 3
 #
 # Respects --quiet and --json switches (no output in those modes except critical errors).
 #
@@ -2042,9 +2042,9 @@ EOF
 # Designed to be reusable in other projects in the springboot family.
 #
 # === SINGLE SOURCE OF TRUTH ENFORCEMENT FOR TEXT OUTPUT ===
-# All human-readable messages, separators, and startup instructions
+# All human-readable messages, separators, debug hints, and startup instructions
 # MUST go exclusively through output_text() via the approved helpers:
-# info(), msg(), empty_line(), double_line(), etc.
+# info(), msg(), warn(), error(), empty_line(), double_line(), etc.
 # NEVER use raw printf/echo/cat for any user-visible text.
 # This prevents regression when --quiet or --json is active.
 # === END OF SINGLE SOURCE OF TRUTH ENFORCEMENT ===
@@ -2053,13 +2053,21 @@ EOF
 # =============================================================================
 
 build_and_run() {
+    # --- Safe Variable Defaults ----
+    # Defensive defaults - never assume globals are set
+    : "${PROJECT_DIR:=/tmp/springboot-${APP_NAME}}"
+    : "${SPRINGBOOT_VER:=2.7.18}"
+    : "${PORT:=8080}"
+    : "${JAR_NAME:=hello-${APP_NAME}-0.0.1.jar}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
 
     info "Building project with Maven..."
 
     mvn clean package -DskipTests || {
         warn "Maven build failed."
-        printf "Debug hint: cd \"%s\" && mvn clean package -DskipTests\n" "${PROJECT_DIR}"
-        printf "Check pom.xml, Java source, or network issues\n" >&2
+        msg "Debug hint: cd \"${PROJECT_DIR}\" && mvn clean package -DskipTests"
+        msg "Check pom.xml, Java source, or network issues"
         exit 1
     }
 
@@ -2068,9 +2076,9 @@ build_and_run() {
     if [ -f "${jar_path}" ]; then
         empty_line
         double_line
-        msg "  Spring Boot ${SPRINGBOOT_VER} is starting...\n"
-        msg "  → Open: http://localhost:${PORT}/\n"
-        msg "  → Ctrl+C to stop\n"
+        msg "  Spring Boot ${SPRINGBOOT_VER} is starting..."
+        msg "  → Open: http://localhost:${PORT}/"
+        msg "  → Ctrl+C to stop"
         double_line
         empty_line
         empty_line
@@ -2080,26 +2088,52 @@ build_and_run() {
         error "Maven reported success but expected JAR file is missing!"
         error "   Expected JAR : ${jar_path}"
         error "   Project dir  : ${PROJECT_DIR}"
-        printf "Debug command: ls -la \"%s/target/\"\n" "${PROJECT_DIR}" >&2
+        msg "Debug command: ls -la \"${PROJECT_DIR}/target/\""
         exit 1
     fi
 }
-
 
 # =============================================================================
 # show_spring_boot_help() - Display help information for the app
 # =============================================================================
 #
-# Shows usage, available commands, options, and important legacy notes.
+# GENERAL PURPOSE:
+# Shows usage, available commands, options, and important version-specific notes.
+# Automatically detects whether the Spring Boot version is legacy (2.x) and
+# shows the appropriate EOL warning.
+#
+# This function is designed to be reused across springboot 2,3 or 4,
+# and springboot4 without duplication.
+#
 # Fully respects --quiet and --json modes.
 #
 # In --json mode: returns a minimal success object instead of long text.
 # In --quiet mode: prints nothing (silent).
 #
-# This is the user-facing help text and should be kept in sync with the README.md.
+# Respects:
+#   --quiet, --json
+#
+# !!! DO NOT MODIFY OR SIMPLIFY THIS FUNCTION !!!
+# The version detection logic and output routing are intentional for family-wide reuse.
+# Designed to be shared across the entire springboot family.
+#
+# === SINGLE SOURCE OF TRUTH ENFORCEMENT FOR TEXT OUTPUT ===
+# All help text MUST go exclusively through output_text() via the approved
+# helpers: msg(), plain(), empty_line(), etc.
+# NEVER use raw cat, printf, or echo for any user-visible text.
+# This prevents regression when --quiet or --json is active.
+# === END OF SINGLE SOURCE OF TRUTH ENFORCEMENT ===
+#
+# Last reviewed: 14 April 2026
 # =============================================================================
 
 show_spring_boot_help() {
+    # --- Safe Variable Defaults ----
+    # Defensive defaults - never assume globals are set
+    : "${SPRINGBOOT_VER:=2.7.18}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+
     if [ "${JSON}" -eq 1 ]; then
         # JSON mode: return clean, machine-friendly response
         output_json "success" "" \
@@ -2115,46 +2149,54 @@ show_spring_boot_help() {
         return 0
     fi
 
-    cat << EOF
-${APP_NAME} v${VERSION} — Spring Boot 2.7.18 Quick Setup & Runner
+    # Smart version detection for EOL warning (reusable across family)
+    local major_version
+    major_version="${SPRINGBOOT_VER%%.*}"   # Extract first number (2, 3, 4...)
 
-The friendliest way to run and maintain Spring Boot 2.7.18 projects.
+    local eol_warning=""
+    if [ "${major_version}" = "2" ]; then
+        eol_warning="  • Spring Boot 2.7.x reached OSS end-of-support in late 2023."
+    fi
 
-Usage:
-  ${APP_NAME}                          Setup environment + build + run (preserves project)
-  ${APP_NAME} --reset                  Full reset: delete and regenerate project files
-  ${APP_NAME} --project-dir <path>     Run against an existing legacy project
-  ${APP_NAME} --no-run                 Setup only (no build/run) — useful for CI/Docker
-  ${APP_NAME} status                   Show application status
-  ${APP_NAME} about                    Full diagnostics (Java, Maven, project, etc.)
-  ${APP_NAME} version                  Show version
-  ${APP_NAME} version-check            Compare with latest
-  ${APP_NAME} self-update              Update to latest version
-  ${APP_NAME} self-uninstall           Remove timer from the system
-  ${APP_NAME} reinstall                Force reinstall
-  ${APP_NAME} help                     This help
-
-Options:
-  --project-dir <path>   Use custom project directory (default: ~/springboot-${APP_NAME})
-  --reset                Force full project reset (deletes and regenerates everything)
-  --no-run               Setup environment and project only, skip build & run
-  --quiet, -q            Suppress non-error messages
-  --json                 Machine-readable JSON output (implies --quiet)
- 
-
-Important Notes:
-  • Normal run preserves your existing project files, pom.xml, and source code.
-  • Spring Boot 2.7.18 is past OSS end-of-life (final OSS release). 
-    This tool is intended for legacy maintenance and commercial support environments.
-
-Examples:
-  ${APP_NAME}                              # Normal run (recommended)
-  ${APP_NAME} --project-dir /my/old/project
-  ${APP_NAME} --no-run                     # Prepare for Docker/CI
-  ${APP_NAME} --reset                      # Clean slate
-  ${APP_NAME} about --json
-
-EOF
+    msg "${APP_NAME} v${VERSION} — Spring Boot ${SPRINGBOOT_VER} Quick Setup & Runner"
+    plain ""
+    msg "The friendliest way to run and maintain Spring Boot ${SPRINGBOOT_VER} projects."
+    plain ""
+    msg "Usage:"
+    msg "  ${APP_NAME}                          Setup environment + build + run (preserves project)"
+    msg "  ${APP_NAME} --reset                  Full reset: delete and regenerate project files"
+    msg "  ${APP_NAME} --project-dir <path>     Run against an existing legacy project"
+    msg "  ${APP_NAME} --no-run                 Setup only (no build/run) — useful for CI/Docker"
+    msg "  ${APP_NAME} status                   Show application status"
+    msg "  ${APP_NAME} about                    Full diagnostics (Java, Maven, project, etc.)"
+    msg "  ${APP_NAME} version                  Show version"
+    msg "  ${APP_NAME} version-check            Compare with latest"
+    msg "  ${APP_NAME} self-update              Update to latest version"
+    msg "  ${APP_NAME} self-uninstall           Remove from the system"
+    msg "  ${APP_NAME} reinstall                Force reinstall"
+    msg "  ${APP_NAME} help                     This help"
+    plain ""
+    msg "Options:"
+    msg "  --project-dir <path>   Use custom project directory (default: ~/springboot-${APP_NAME})"
+    msg "  --reset                Force full project reset (deletes and regenerates everything)"
+    msg "  --no-run               Setup environment and project only, skip build & run"
+    msg "  --quiet, -q            Suppress non-error messages"
+    msg "  --json                 Machine-readable JSON output (implies --quiet)"
+    plain ""
+    msg "Important Notes:"
+    msg "  • Normal run preserves your existing project files, pom.xml, and source code."
+    if [ -n "${eol_warning}" ]; then
+        msg "${eol_warning}"
+    fi
+    msg "  • This tool is intended for projects that need or prefer Spring Boot ${SPRINGBOOT_VER}."
+    plain ""
+    msg "Examples:"
+    msg "  ${APP_NAME}                              # Normal run (recommended)"
+    msg "  ${APP_NAME} --project-dir /my/old/project"
+    msg "  ${APP_NAME} --no-run                     # Prepare for Docker/CI"
+    msg "  ${APP_NAME} --reset                      # Clean slate"
+    msg "  ${APP_NAME} about --json"
+    plain ""
 }
 
 # =============================================================================

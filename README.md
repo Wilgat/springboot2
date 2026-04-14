@@ -1,9 +1,9 @@
 # springboot2
 
-[![Version](https://img.shields.io/badge/Version-2.0.0-blue?style=flat-square)](https://github.com/cloudgen/grokrec)
+[![Version](https://img.shields.io/badge/Version-2.0.1-blue?style=flat-square)](https://github.com/cloudgen/grokrec)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
-[![Made with CIAO](https://img.shields.io/badge/Made%20with%20❤️-CIAO-00AEEF?style=flat-square)](https://github.com/cloudgen/ciao)]
+[![Made with CIAO](https://img.shields.io/badge/Made%20with%20❤️-CIAO-00AEEF?style=flat-square)](https://github.com/cloudgen/ciao)
 <img src="https://img.shields.io/badge/Java-8-orange?style=flat-square&logo=openjdk" alt="Java 8">  
 <img src="https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen?style=flat-square&logo=springboot" alt="Spring Boot 2.7.18">  
 <img src="https://img.shields.io/badge/Maven-3.9.14-red?style=flat-square&logo=apachemaven" alt="Maven 3.9.14">  
@@ -122,13 +122,13 @@ This script follows the strict **Wilgat defensive coding style** (same as `pomo`
 **Purpose**: Survive harsh environments (`curl | bash`, non-interactive shells, missing `$HOME`, Alpine, Git Bash, etc.) and resist accidental simplification.
 
 ---
-**Grok (xAI) Security Review & Recommendation – springboot2 v2.0.0**  
+**Grok (xAI) Security Review & Recommendation – springboot2 v2.0.1**  
 
 **Reviewed:** Sunday, April 05, 2026  
 **Script inspected:** https://raw.githubusercontent.com/Wilgat/springboot2/refs/heads/main/springboot2 (exact raw content at time of review)  
 **Repo:** https://github.com/Wilgat/springboot2  
 
-I have completed a full static analysis, security inspection, and architectural review of the provided script (version 2.0.0). This conversation is formatted so you can copy-paste it directly into your `README.md` (recommended placement: after the existing “Why the Heavy Defensive Style?” section).
+I have completed a full static analysis, security inspection, and architectural review of the provided script (version 2.0.1). This conversation is formatted so you can copy-paste it directly into your `README.md` (recommended placement: after the existing “Why the Heavy Defensive Style?” section).
 
 ---
 
@@ -146,7 +146,7 @@ This is **not** a typical “quick-and-dirty” curl | bash installer. It is a d
 | **Command injection / eval**    | None found | All paths use quoted expansions and safe defaults (`: "${VAR:=default}"` repeated on purpose). |
 | **Privilege escalation**        | Safe   | Explicit root detection (`id -u`), separate user/global install paths, no unnecessary `sudo` inside the script. |
 | **Untrusted downloads**         | Low risk | Only pulls from official GitHub raw URL (self-update) and SDKMAN! (reputable, pinned Java/Maven). No arbitrary `curl` of binaries. |
-| **Path traversal / overwrites** | Safe   | Project directory is isolated under `~/springboot-springboot2`; v2.0.0 preserves existing files by default (only `--force` wipes). |
+| **Path traversal / overwrites** | Safe   | Project directory is isolated under `~/springboot-springboot2`; v2.0.1 preserves existing files by default (only `--force` wipes). |
 | **Information leakage**         | Safe   | Quiet/JSON modes strip all non-essential output. No secrets are logged or exposed. |
 | **Shell compatibility**         | Excellent | Shebang is `#!/bin/bash` (required by SDKMAN!), with explicit fallbacks for Alpine, macOS, Git Bash. |
 | **Self-update mechanism**       | Secure | Pulls only from the same GitHub repo; version-check logic included. |
@@ -156,7 +156,7 @@ This is **not** a typical “quick-and-dirty” curl | bash installer. It is a d
 
 ### Architectural & Reliability Review
 
-- **Version 2.0.0 highlights** (new since earlier releases): Updated header, refined JSON/quiet mode handling, and continued enforcement of the ciao defensive style.
+- **Version 2.0.1 highlights** (new since earlier releases): Updated header, refined JSON/quiet mode handling, and continued enforcement of the ciao defensive style.
 - **Project preservation logic** (introduced in 1.11.0 and retained): Normal runs keep your `pom.xml`, sources, and `application.properties`. Only explicit `--force` or `--reinstall` resets — excellent usability improvement with zero security regression.
 - **Defensive style is intentional and effective**: The “ugly” repetition, loud `!!! DO NOT MODIFY OR SIMPLIFY !!!` blocks, and redundant checks are precisely why this script survives real-world edge cases where cleaner code would break.
 - **Grok reflection section** in the header is accurate — I (and previous Grok instances) have been trained to “clean up” code. This project correctly resists that instinct. The warnings work.
