@@ -204,7 +204,7 @@ MIT
 ---
 
 **Part of the Wilgat defensive tool family.**  
-*Last updated: April 2026*
+*Last updated: 2026-07-15 · version **2.1.0***
 
 ---
 
