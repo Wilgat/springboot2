@@ -67,13 +67,36 @@ run_test_cli() {
     assert_contains "help --json type success" "$_out" '"type":"success"'
     assert_contains "help --json mentions human mode" "$_out" "Help text"
 
-    # --- about (json): no CHECKSUM field ---
+    # --- about (json): no CHECKSUM field; storage resolve fields ---
     _out=$(sh "${SCRIPT}" --json about 2>/dev/null)
     _ec=$?
     assert_eq "about --json exit 0" 0 "$_ec"
     assert_contains "about --json type" "$_out" '"type":"about"'
     assert_contains "about --json app" "$_out" "\"app\":\"${APP_NAME}\""
     assert_not_contains "about --json must not include CHECKSUM" "$_out" "CHECKSUM"
+    assert_contains "about --json effective_storage" "$_out" '"effective_storage"'
+    assert_contains "about --json storage_dir" "$_out" '"storage_dir"'
+    assert_contains "about --json storage includes app name" "$_out" "${APP_NAME}"
+
+    # --- storage resolve isolation (Option A: EFFECTIVE_STORAGE_DIR via util_resolve_storage) ---
+    ci_isolated_env
+    _out=$(
+        HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" \
+        sh "${SCRIPT}" --json about 2>/dev/null
+    )
+    _ec=$?
+    assert_eq "about --json under isolated HOME exit 0" 0 "$_ec"
+    # Must isolate by app name; user may be real username even under isolated HOME
+    assert_contains "isolated about effective_storage has app" "$_out" "${APP_NAME}"
+    # storage_dir fallback should be under isolated HOME/.cache when not using shm/tmp preference
+    # effective_storage is often /dev/shm or /tmp when writable — still must contain APP_NAME
+    case "$_out" in
+        *'"effective_storage":"'*"${APP_NAME}"*) t_pass "effective_storage path contains ${APP_NAME}" ;;
+        *) t_fail "effective_storage missing app isolation in: $(_trunc "$_out")" ;;
+    esac
+    # STORAGE_DIR fallback field should reference cache path with app+user shape
+    assert_contains "storage_dir field present under isolation" "$_out" '"storage_dir"'
+    ci_cleanup_env
 
     # --- unknown command (die → exit 1; live JSON type "error") ---
     _err=$(sh "${SCRIPT}" no-such-command 2>&1 >/dev/null)

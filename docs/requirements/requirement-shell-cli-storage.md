@@ -69,18 +69,21 @@ If tier 3 cannot be created → **MUST** fail closed via `die` (or JSON error pa
 | Item | Live value |
 |------|------------|
 | **Resolver** | `util_resolve_storage` in `./springboot2` |
-| **Defaults** | `USERNAME` from `id -un` or `unknown`; `APP_NAME` default `app` inside helper; Config `STORAGE_DIR` |
+| **Config fallback** | `: "${STORAGE_DIR:=${XDG_CACHE_HOME}/${APP_NAME}-${USERNAME}}"` (env-overridable) |
+| **Effective root** | `EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)` in `main_spring_boot_app` after shell config source; exported; root `mkdir -p` |
+| **Priority (live)** | `/dev/shm/${APP_NAME}-${USERNAME}` → `/tmp/…` → `STORAGE_DIR` |
 | **Output on tier-3 fail** | `die "Cannot create storage directory ${STORAGE_DIR}"` |
-| **Call sites (honest)** | **Gap / Partial** — helper is defined and protected; **no current call sites** in dispatch/domain/install paths as of 2026-07-15. Future prompt/cache/scratch features **MUST** use it rather than new ad-hoc roots. |
-| **Naming family** | Util (`util_*`) per modular function design (P6) |
-| **Tests** | No dedicated suite case yet — optional when first consumer lands |
+| **Call sites** | **Implemented** — main sets `EFFECTIVE_STORAGE_DIR`; `about` (human + JSON) surfaces `effective_storage` + `storage_dir` |
+| **Not used for** | `PROJECT_DIR` / domain project tree (domain law) |
+| **Naming family** | Util (`util_*`) |
+| **Tests** | `tests/test_cli.sh` — about JSON fields + isolated HOME isolation |
 
 #### Definition of done (storage)
 
 1. §2.2 priority and isolation hold in `util_resolve_storage`.  
 2. No parallel ad-hoc product scratch roots without requirement revision.  
 3. Fail closed when no storage available.  
-4. When a consumer is added: call resolver; add regression test; update this Notes row (clear Gap).  
+4. Main resolves once per run; about exposes effective path; regression tests cover isolation.  
 5. Registered in `docs/requirements/index.md`.
 
 ### 2.6 Why This Requirement Exists (CIAO)

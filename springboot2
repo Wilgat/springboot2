@@ -174,7 +174,8 @@ REPO_NAME="springboot2"
 
 USERNAME="$(id -un 2>/dev/null || echo "unknown")"
 
-STORAGE_DIR="${XDG_CACHE_HOME}/${APP_NAME}-${USERNAME}"
+# Persistent cache fallback for util_resolve_storage tier 3 (overridable via env)
+: "${STORAGE_DIR:=${XDG_CACHE_HOME}/${APP_NAME}-${USERNAME}}"
 
 # ----------------------------- Spring boot Defaults --------------------------
 # ────────────────────────────────────────────────
@@ -221,11 +222,8 @@ if [ -z "${IS_ROOT:-}" ]; then
 fi
 
 USERNAME="$(id -un 2>/dev/null || echo "unknown")"
-
-# -------------------------- pomo Storage Directories ---------------------
-VOLATILE_DIR="/dev/shm"
-PERSISTENT_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/${APP_NAME}"
-
+# Re-bind STORAGE_DIR if still default-shaped after USERNAME refresh
+: "${STORAGE_DIR:=${XDG_CACHE_HOME:-${HOME}/.cache}/${APP_NAME}-${USERNAME}}"
 
 # =============================================================================
 # get_install_bin_path() - Return the correct binary path to operate on
@@ -605,6 +603,9 @@ util_resolve_storage() {
     # Defensive defaults - never assume globals are set
     : "${USERNAME:=unknown}"
     : "${APP_NAME:=app}"
+    : "${HOME:=/tmp}"
+    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
+    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/${APP_NAME}-${USERNAME}}"
 
     if [ -d "/dev/shm" ] && [ -w "/dev/shm" ]; then
         echo "/dev/shm/${APP_NAME}-${USERNAME}"
@@ -1722,6 +1723,12 @@ show_about_spring_boot_app() {
             app_running="true"
         fi
 
+        # Resolve storage if main has not yet (defensive)
+        if [ -z "${EFFECTIVE_STORAGE_DIR:-}" ]; then
+            EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
+        fi
+        : "${STORAGE_DIR:=${XDG_CACHE_HOME:-${HOME}/.cache}/${APP_NAME}-${USERNAME}}"
+
         # Clean JSON output - no generic message
         output_json "about" "" \
             "app" "${APP_NAME}" \
@@ -1734,6 +1741,8 @@ show_about_spring_boot_app() {
             "project_exists" "${project_exists}" \
             "port" "${PORT}" \
             "app_running" "${app_running}" \
+            "effective_storage" "${EFFECTIVE_STORAGE_DIR}" \
+            "storage_dir" "${STORAGE_DIR}" \
             "user" "${USERNAME}" \
             "shell" "$(ps -p $$ -o comm= 2>/dev/null | tr -d '()')"
 
@@ -1781,6 +1790,13 @@ show_about_spring_boot_app() {
     else
         warn "Project    : ${PROJECT_DIR} (does not exist)"
     fi
+
+    # Scratch/cache storage (not project dir)
+    if [ -z "${EFFECTIVE_STORAGE_DIR:-}" ]; then
+        EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
+    fi
+    msg "Storage    : ${EFFECTIVE_STORAGE_DIR} (effective)"
+    msg "Cache fall.: ${STORAGE_DIR:-n/a}"
 
     # App running status
     local running_status="no"
@@ -2461,6 +2477,16 @@ main_spring_boot_app() {
     # This must happen early so that PATH, SDKMAN, and user environment
     # are available for ALL sub-commands (about, run, version-check, etc.)
     util_source_user_shell_config
+
+    # Effective scratch/cache root for this run (requirement-shell-cli-storage)
+    # Priority: /dev/shm → /tmp → STORAGE_DIR (persistent cache fallback)
+    : "${USERNAME:=unknown}"
+    : "${XDG_CACHE_HOME:=${HOME}/.cache}"
+    : "${STORAGE_DIR:=${XDG_CACHE_HOME}/${APP_NAME}-${USERNAME}}"
+    EFFECTIVE_STORAGE_DIR=$(util_resolve_storage)
+    export EFFECTIVE_STORAGE_DIR STORAGE_DIR
+    # Ensure root exists for future scratch consumers (tiers 1–2 only echo path)
+    mkdir -p "${EFFECTIVE_STORAGE_DIR}" 2>/dev/null || true
 
     local cmd="run"
 
