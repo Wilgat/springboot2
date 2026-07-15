@@ -49,7 +49,7 @@ Empty argv detect cases:
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.0.1` |
+| **VERSION** | `2.1.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |

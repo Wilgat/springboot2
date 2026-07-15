@@ -6,6 +6,21 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) 
 
 ---
 
+## [2.1.0] - 2026-07-15
+
+### Added
+- Domain requirement law, storage resolve (`EFFECTIVE_STORAGE_DIR` / `util_resolve_storage`), Shape A/B install integrity.
+- Full POSIX test suite and CI; hybrid empty-argv (install when absent, domain when installed).
+
+### Changed
+- Product version target and runtime `VERSION` set to **2.1.0**.
+- Lifecycle force wiring, help↔dispatcher (`status` / `reinstall` / `--reset`), live naming law (§3.1 option 2).
+
+### Fixed
+- Uninstall fail-closed (`confirm_required`); `SCRIPT_URL` env override; companion checksum verify path.
+
+---
+
 ## [2.0.0] - 2026-04-14
 
 ### Major Changes

@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# springboot2 – version 2.0.1
+# springboot2 – version 2.1.0
 # =============================================================================
 #
 # One-command installer + launcher for Spring Boot 2.7.18
@@ -125,13 +125,13 @@
 #   {"type":"status","app_running":"true","port":8080,"project_dir":"/home/user/myproject"}
 #
 #   About:
-#   {"type":"about","app":"springboot2","version":"2.0.1","installed":"true","java":"openjdk version 1.8...","maven":"Apache Maven 3.9.14","project_exists":"true","app_running":"false"}
+#   {"type":"about","app":"springboot2","version":"2.1.0","installed":"true","java":"openjdk version 1.8...","maven":"Apache Maven 3.9.14","project_exists":"true","app_running":"false"}
 #
 #   Error:
 #   {"type":"error","message":"Java installation failed","code":"setup_failed"}
 #
 #   Version:
-#   {"type":"version","app":"springboot2","version":"2.0.1"}
+#   {"type":"version","app":"springboot2","version":"2.1.0"}
 #
 # Important Notes:
 #   - Commands like "about", "version", "status" fully support --json.
@@ -147,7 +147,7 @@
 
 # ----------------------------- Project Constants -----------------------------
 APP_NAME="springboot2"      # ← HARDCODED - Required for curl | sh instal
-VERSION="2.0.1"
+VERSION="2.1.0"
 DESCRIPTION="Spring Boot 2.7.18 quick setup"
 REMOTE_VERSION=$VERSION
 SH=bash
