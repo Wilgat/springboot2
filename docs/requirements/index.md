@@ -11,6 +11,7 @@
 |----------|-------|------|--------|------|---------|
 | requirement-shell-automatic-checksum | Automatic companion-digest integrity (transparent link/value/result; CHECKSUM not help/about) | shell | Active | `requirement-shell-automatic-checksum.md` | 2026-07-15 |
 | requirement-shell-cli-interface | Shell CLI interface (commands, flags, dispatch, modes) | shell | Active | `requirement-shell-cli-interface.md` | 2026-07-15 |
+| requirement-shell-cli-storage | Shell CLI storage resolve (volatile/cache roots, per-user isolation) | shell | Active | `requirement-shell-cli-storage.md` | 2026-07-15 |
 | requirement-shell-cli-zero-arguments | Empty argv Type O hybrid (install when absent; domain run when installed) | shell | Active | `requirement-shell-cli-zero-arguments.md` | 2026-07-15 |
 | requirement-shell-idempotency | Shell idempotency / re-run safety for ensure-style ops | shell | Active | `requirement-shell-idempotency.md` | 2026-07-15 |
 | requirement-shell-interactive-vs-noninteractive | Interactive vs non-interactive / `curl\|bash` behavior | shell | Active | `requirement-shell-interactive-vs-noninteractive.md` | 2026-07-15 |

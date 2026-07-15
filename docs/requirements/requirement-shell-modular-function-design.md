@@ -156,7 +156,7 @@ function_name() {
 | CLI entry / dispatch | `main_spring_boot_app` | Single dispatcher; no second parallel main |
 | Interactive confirm | `prompt_yes_no` | Non-interactive safe behavior |
 | Domain product ops | `setup_*` / `run_springboot_project` | Domain only; not Type 0 replace |
-| Shared utils | `util_*` | Non-domain helpers greppable by prefix |
+| Shared utils | `util_*` | Non-domain helpers greppable by prefix; storage resolve owned with `requirement-shell-cli-storage` |
 
 ### 2.5 Surgical change and reuse rules (portable)
 
@@ -188,7 +188,7 @@ Re-read `./springboot2`. This table **is** product law (not “target debt”):
 | Domain | `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`, `check_alpine_requirements` |
 | PATH / prompts | `add_to_shell_path`, `in_path`, `prompt_yes_no` |
 | Integrity | `file_sha256`, `verify_download_integrity` |
-| Util | `util_resolve_storage`, `util_source_user_shell_config`, `write_file_atomic` |
+| Util | `util_resolve_storage`, `util_source_user_shell_config`, `write_file_atomic` (storage law: `requirement-shell-cli-storage`) |
 
 #### Structural notes
 
