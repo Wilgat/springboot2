@@ -29,7 +29,7 @@ It defines modular function organization for a **monolithic yet modular** single
 | **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
 | **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
 
-Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `build_and_run`) are **in addition** to Type 0 lifecycle.
+Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`) are **in addition** to Type 0 lifecycle.
 
 ## 2. Core Rules / Requirements (Mandatory)
 
@@ -54,21 +54,39 @@ Optional multi-file layout under `src/` for future authoring **MAY** exist only 
 
 | Family | Category | Purpose | Normative live names |
 |--------|----------|---------|----------------------|
-| **Output SSOT** | Central messaging | All user/machine product output | `output_text`, `output_json`, `output_json_error`, wrappers `info`/`success`/`warn`/`error`/`die`/`plain`/`msg`/`msg_n` |
-| **Install / lifecycle** | Type 0 self-management | Install, detect, update, uninstall | `perform_self_install`, `maybe_install`, `is_installed`, `get_installed_version`, `get_install_bin_path`, `self_update`, `self_uninstall` |
-| **Dispatch / UX** | CLI entry | Flags, commands, help, about | `main_spring_boot_app`, `show_spring_boot_help`, `show_about_spring_boot_app` |
+| **Output SSOT** | Central messaging | All user/machine product output | `output_text`, `output_json`, `output_json_error` |
+| **Output wrappers** | Thin human helpers | **Only** call `output_text` / JSON emitters | bare `info`/`success`/`warn`/`error`/`die`/`plain`/`msg`/`msg_n`/`empty_line`/`double_line` |
+| **Install / lifecycle** | Type 0 self-management | Verb roles (not one letter prefix) | `perform_*` orchestrate; `maybe_*` soft entry; `is_*`/`get_*` detect; `self_*` lifecycle |
+| **Dispatch / UX** | CLI entry | Entry vs presentation | `main_spring_boot_app`; `show_spring_boot_help`; `show_about_spring_boot_app` |
 | **Version** | Semver helpers | Compare / remote check | `version_gt`, `version_check` |
 | **PATH / prompt** | Env integration | PATH lines, confirms | `add_to_shell_path`, `in_path`, `prompt_yes_no` |
-| **Integrity** | Companion digest | Hash file / verify | `file_sha256` / verify path inside install (when present) |
-| **Domain** | Spring Boot ops | Toolchain + project + run | `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `build_and_run`, `check_alpine_requirements` |
+| **Integrity** | Companion digest | Hash + verify | `file_sha256`, `verify_download_integrity` |
+| **Util** | Shared non-domain | Greppable `util_*` | `util_resolve_storage`, `util_source_user_shell_config`, `write_file_atomic` |
+| **Domain** | Spring Boot ops | Toolchain / project / run | `setup_*`, `check_alpine_requirements`, `run_springboot_project` |
 
 **Strict naming rules (this product):**
 
 1. New helpers **must** extend a family above (or add a row here in the same change).  
-2. User-facing messages **must** go through Output SSOT — not raw `echo`/`printf`.  
+2. User-facing messages **must** go through Output SSOT; bare wrappers **must only** delegate to `output_text` / `output_json*` (P2).  
 3. Domain ops **must not** replace Type 0 lifecycle entry points.  
-4. Do **not** reintroduce seed `out_*`/`inst_*`/`app_*` as the only Implemented inventory without a full rename project.  
-5. Prefer small, single-purpose functions; preserve Protection Zones.
+4. Do **not** reintroduce seed `out_*`/`inst_*`/`app_*` as required inventory without a full rename project (P1/P7).  
+5. Prefer small, single-purpose functions; preserve Protection Zones.  
+6. New shared non-domain helpers **SHOULD** use `util_*` (P6).  
+7. Domain setup = `setup_*`; domain run = `run_springboot_project` (P4).  
+8. One `main_*` entry; presentation helpers use `show_*` (P5).  
+9. Install stays verb-named (`perform_`/`maybe_`/`is_`/`get_`/`self_`) — no second parallel install stack (P3).
+
+### 2.2.1 Findings closure (prefix review P1–P7)
+
+| ID | Finding | Resolution (2026-07-15) |
+|----|---------|-------------------------|
+| **P1** | No single global prefix like bootstrap A | **Accepted design** — multi-family law; option 2 |
+| **P2** | Bare wrappers outside `output_*` string | **Accepted** — wrappers only delegate to Output SSOT |
+| **P3** | Install not one prefix | **Accepted convention** — verb roles documented as one family |
+| **P4** | Domain `setup_*` vs bare `build_and_run` | **Fixed** — renamed to `run_springboot_project` |
+| **P5** | `main_*` vs `show_*` mix | **Accepted convention** — entry vs presentation |
+| **P6** | Unprefixed util helpers | **Fixed** — `util_resolve_storage`, `util_source_user_shell_config` |
+| **P7** | Seed `out_*`/`inst_*`/`app_*` on disk | **Clean** — zero seed-prefix helpers |
 
 ### 2.3 Function documentation standards (mandatory)
 
@@ -137,7 +155,8 @@ function_name() {
 | PATH / shell profile | `add_to_shell_path` / `in_path` | Duplicate-safe append |
 | CLI entry / dispatch | `main_spring_boot_app` | Single dispatcher; no second parallel main |
 | Interactive confirm | `prompt_yes_no` | Non-interactive safe behavior |
-| Domain product ops | `setup_*` / `build_and_run` | Domain only; not Type 0 replace |
+| Domain product ops | `setup_*` / `run_springboot_project` | Domain only; not Type 0 replace |
+| Shared utils | `util_*` | Non-domain helpers greppable by prefix |
 
 ### 2.5 Surgical change and reuse rules (portable)
 
@@ -154,30 +173,32 @@ function_name() {
 | **Product / binary** | `springboot2` (`APP_NAME`) |
 | **Single shipped script** | Repo root `./springboot2` (bash `#!/bin/bash`; live unprefixed + domain helpers — see Live function inventory) |
 | **`src/` directory** | Present but empty — **not** a multi-file runtime layout yet |
-| **Domain helpers** | Live domain uses `setup_*` / `build_and_run` / `show_*` (not necessarily `springboot2_*` prefix) |
+| **Domain helpers** | Live domain uses `setup_*` / `run_springboot_project` / `show_*` (not necessarily `springboot2_*` prefix) |
 | **Bootstrap** | Direct execution when `${0##*/}` is `springboot2` or `springboot2.sh` → `main_spring_boot_app "$@"` |
 
-#### Live inventory (authoritative — §3.1 option 2 closed)
+#### Live inventory (authoritative — §3.1 option 2 + P1–P7 closed)
 
 Re-read `./springboot2`. This table **is** product law (not “target debt”):
 
 | Area | Live examples |
 |------|----------------|
-| Output | `output_text`, `output_json`, `output_json_error`, `info`, `success`, `warn`, `error`, `die`, `plain`, `msg`, `msg_n`, `empty_line`, `double_line` |
+| Output | `output_text`, `output_json`, `output_json_error`, wrappers `info`/`success`/`warn`/`error`/`die`/`plain`/`msg`/`msg_n`/`empty_line`/`double_line` |
 | Install / lifecycle | `perform_self_install`, `maybe_install`, `is_installed`, `get_installed_version`, `get_install_bin_path`, `self_update`, `self_uninstall`, `version_check`, `version_gt` |
 | Dispatch / UX | `main_spring_boot_app`, `show_spring_boot_help`, `show_about_spring_boot_app` |
-| Domain | `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `build_and_run`, `check_alpine_requirements` |
-| PATH / prompts | `add_to_shell_path`, `in_path`, `prompt_yes_no` (and related as present) |
-| Integrity | `file_sha256` + companion verify on install download path |
+| Domain | `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`, `check_alpine_requirements` |
+| PATH / prompts | `add_to_shell_path`, `in_path`, `prompt_yes_no` |
+| Integrity | `file_sha256`, `verify_download_integrity` |
+| Util | `util_resolve_storage`, `util_source_user_shell_config`, `write_file_atomic` |
 
 #### Structural notes
 
 | Issue | Status |
 |-------|--------|
-| Seed `out_*`/`inst_*`/`app_*` | **Not product law** — bootstrap A only; authorized variance (§3.1 option 2, 2026-07-15) |
-| Thin wrappers (`success`, …) | **Allowed** — delegate to `output_text` SSOT |
-| Domain helpers | **Live** — `setup_*` / `build_and_run` |
-| Dual-inventory debt | **Closed** by retargeting law to live names (not by renaming ship unit) |
+| Seed `out_*`/`inst_*`/`app_*` | **Not product law** — P7 clean; option 2 |
+| Thin wrappers (`success`, …) | **Allowed** — P2; only via `output_text` |
+| Domain helpers | **Live** — `setup_*` + `run_springboot_project` (P4) |
+| Dual-inventory debt | **Closed** — §3.1 option 2 |
+| Prefix review P1–P7 | **Closed** — §2.2.1 |
 
 #### New function checklist (this project)
 
@@ -277,7 +298,7 @@ A modular-structure change for springboot2 is **not done** if any of the followi
 | Output | `output_text`, `output_json`, `output_json_error`, `info`, `success`, `warn`, `error`, `die`, `plain`, `msg`, `msg_n` |
 | Install / lifecycle | `perform_self_install`, `maybe_install`, `is_installed`, `get_installed_version`, `get_install_bin_path`, `self_update`, `self_uninstall`, `version_check`, `version_gt` |
 | Dispatch | `main_spring_boot_app`, `show_spring_boot_help`, `show_about_spring_boot_app` |
-| Domain | `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `build_and_run`, `check_alpine_requirements` |
+| Domain | `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`, `check_alpine_requirements` |
 | PATH | `add_to_shell_path`, `in_path`, per-shell helpers as present |
 
 Compliance claiming seed-prefix inventory as Implemented is **false** until rename or notes mark **target vs live**.

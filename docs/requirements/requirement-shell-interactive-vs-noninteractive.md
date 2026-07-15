@@ -27,7 +27,7 @@ It defines interactive vs non-interactive behavior for this shell project (globa
 | **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
 | **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
 
-Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `build_and_run`) are **in addition** to Type 0 lifecycle.
+Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`) are **in addition** to Type 0 lifecycle.
 
 ## 2. Core Rules / Requirements (Mandatory)
 

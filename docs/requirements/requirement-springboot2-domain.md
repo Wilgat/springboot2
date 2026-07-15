@@ -25,7 +25,7 @@ It owns product ops so agents do not treat shell lifecycle files alone as full-p
 | **Dispatcher** | `main_spring_boot_app` (not seed `app_main`) |
 | **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
 | **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
-| **Domain helpers** | `check_alpine_requirements`, `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `build_and_run` |
+| **Domain helpers** | `check_alpine_requirements`, `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project` |
 
 Live scalars and pins are owned by the ship unit Config block. On conflict with Config, use product identity protocol (ask; do not invent dual owners). **Do not** retarget this product to another Spring Boot line (3.x / 4.x) without an explicit product decision — this ship unit is intentionally pinned to **2.7.18**.
 
@@ -54,7 +54,7 @@ When domain default run applies (installed empty argv, explicit `run`, or equiva
 3. `setup_java` — install/default/use pinned Java  
 4. `setup_maven` — install/use pinned Maven  
 5. `setup_springboot_project` — create or preserve demo project under `PROJECT_DIR`  
-6. Unless `--no-run` / `NO_RUN=1`: `build_and_run` (`mvn clean package -DskipTests` then `java -jar` of expected artifact)
+6. Unless `--no-run` / `NO_RUN=1`: `run_springboot_project` (`mvn clean package -DskipTests` then `java -jar` of expected artifact)
 
 Failures **MUST** exit non-zero via output SSOT (`die` / `error`); **MUST NOT** fake success.
 
@@ -77,7 +77,7 @@ Live code today keys full project wipe/regenerate on `FORCE_REINSTALL` (often fr
 | **Empty argv when installed** | Domain run pipeline (§2.2) — **not** Type 0 install no-op; see `requirement-shell-cli-zero-arguments.md` hybrid supersession |
 | **Empty argv when not installed** | Install-ensure first (`maybe_install` / `perform_self_install`); domain run is not the first-install contract |
 | `--project-dir <path>` | Set `PROJECT_DIR`; required path argument or fail loud |
-| `--no-run` | Complete env + project setup; skip `build_and_run`; success message / JSON with `no_run` |
+| `--no-run` | Complete env + project setup; skip `run_springboot_project`; success message / JSON with `no_run` |
 | `--force` / force-user / force-root | Privilege and reinstall policy; project regenerate when wired to `FORCE_REINSTALL` |
 | `--quiet` / `-q`, `--json` | Same mode contract as shell output requirements; domain messages go through output SSOT |
 | `run` | Explicit domain pipeline (same as default) |
@@ -102,7 +102,7 @@ Live code today keys full project wipe/regenerate on `FORCE_REINSTALL` (often fr
 |------|------------|
 | Domain entry | Default `cmd="run"` in `main_spring_boot_app` after Type 0 cases |
 | Auto-install gate | `if ! is_installed && [ $# -eq 0 ]` then install helpers — **not** when already installed |
-| Domain chain | `check_alpine_requirements` → `setup_sdkman` → `setup_java` → `setup_maven` → `setup_springboot_project` → optional `build_and_run` |
+| Domain chain | `check_alpine_requirements` → `setup_sdkman` → `setup_java` → `setup_maven` → `setup_springboot_project` → optional `run_springboot_project` |
 | Project write | `write_file_atomic` for demo files |
 | Run | `exec java -jar "target/${JAR_NAME}"` after successful package |
 | About extras | Domain-rich diagnostics (SDKMAN, project dir, port) via `show_about_spring_boot_app` |
@@ -140,7 +140,7 @@ Live code today keys full project wipe/regenerate on `FORCE_REINSTALL` (often fr
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
 1. Retarget Spring Boot / Java / Maven pins without an explicit product decision and requirement revision.  
-2. Delete or simplify domain helpers (`setup_*`, `build_and_run`, Alpine check) as drive-by cleanup.  
+2. Delete or simplify domain helpers (`setup_*`, `run_springboot_project`, Alpine check) as drive-by cleanup.  
 3. Change installed empty argv from domain run back to install-only no-op without updating this file **and** `requirement-shell-cli-zero-arguments.md`.  
 4. Advertise domain commands/flags in help without dispatcher wiring (or leave known Gaps untracked).  
 5. Default to destroying an existing `PROJECT_DIR` without force/reset policy.  

@@ -7,7 +7,7 @@
 > | Situation | Empty argv **MUST** mean |
 > |-----------|---------------------------|
 > | **Not installed** | **Type O install-ensure** (`maybe_install` / `perform_self_install`) — portable Cases A below |
-> | **Installed** (local or global) | **Domain default run** (`cmd=run`: SDKMAN/Java/Maven/project + `build_and_run`) — **not** install-ensure success no-op |
+> | **Installed** (local or global) | **Domain default run** (`cmd=run`: SDKMAN/Java/Maven/project + `run_springboot_project`) — **not** install-ensure success no-op |
 >
 > Portable Type O text that says “already installed → install no-op only” is **superseded for installed empty argv** by this hybrid and by `requirement-springboot2-domain.md`. First-install / `curl \| bash` path remains install-ensure. **MUST NOT** dump help for installed bare `springboot2`.
 
@@ -57,7 +57,7 @@ Empty argv detect cases:
 | **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
 | **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
 
-Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `build_and_run`) are **in addition** to Type 0 lifecycle.
+Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`) are **in addition** to Type 0 lifecycle.
 
 ## 2. Core Rules / Requirements (Mandatory)
 
@@ -77,7 +77,7 @@ Live scalars are owned by the ship unit Config block. Requirement **cores** stay
 ### 2.2 Single meaning of empty argv (hybrid)
 
 1. When **argv is empty** and the tool is **not installed**, `main_spring_boot_app` **MUST** run **install-ensure** — **MUST NOT** route to `show_spring_boot_help`.  
-2. When **argv is empty** and the tool is **installed**, `main_spring_boot_app` **MUST** run **domain default** (`cmd=run` / setup + optional `build_and_run`) — **MUST NOT** treat that path as install-ensure-only success no-op, and **MUST NOT** dump help. Full domain law: `requirement-springboot2-domain.md`.  
+2. When **argv is empty** and the tool is **installed**, `main_spring_boot_app` **MUST** run **domain default** (`cmd=run` / setup + optional `run_springboot_project`) — **MUST NOT** treat that path as install-ensure-only success no-op, and **MUST NOT** dump help. Full domain law: `requirement-springboot2-domain.md`.  
 3. Explicit `springboot2 help` remains the only full-usage path for help text.  
 4. Bootstrap **MUST** always call `main_spring_boot_app "$@"` so pipe one-liners reach this contract (no `${0##*/}` product-name gate).  
 5. Empty argv **MUST NOT** require the user to pass `install` or `install --force` merely because a previous install already succeeded (installed re-runs go to domain, not “you must force install”).
@@ -265,7 +265,7 @@ Normative summary lives in the **Hybrid supersession** banner at the top of this
 | Situation | Required behavior for **this** product |
 |-----------|----------------------------------------|
 | **Not installed** + empty argv | Install-ensure (`maybe_install` / `perform_self_install`) |
-| **Installed** + empty argv | **Domain default `cmd=run`**: SDKMAN/Java/Maven/project setup + `build_and_run` (not install no-op) — `requirement-springboot2-domain.md` |
+| **Installed** + empty argv | **Domain default `cmd=run`**: SDKMAN/Java/Maven/project setup + `run_springboot_project` (not install no-op) — `requirement-springboot2-domain.md` |
 | **Installed** + explicit lifecycle cmds | `version`, `version-check`, `self-update`, `self-uninstall`, `about`, `help` as dispatched |
 | **Flags** | `--project-dir`, `--no-run`, `--force`, `--force-user`, `--force-root`, `--json`, `--quiet` |
 

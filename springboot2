@@ -564,7 +564,7 @@ prompt_yes_no() {
 }
 
 # =============================================================================
-# resolve_storage() - Storage resolver
+# util_resolve_storage() - Storage resolver
 # =============================================================================
 #
 # GENERAL PURPOSE:
@@ -600,7 +600,7 @@ prompt_yes_no() {
 #
 # Last reviewed: 14, April 2026
 # =============================================================================
-resolve_storage() {
+util_resolve_storage() {
     # --- Safe Variable Defaults ----
     # Defensive defaults - never assume globals are set
     : "${USERNAME:=unknown}"
@@ -2170,7 +2170,7 @@ EOF
 }
 
 # =============================================================================
-# build_and_run() - Build and execute the Spring Boot application
+# run_springboot_project() - Build and execute the Spring Boot application
 # =============================================================================
 #
 # GENERAL PURPOSE:
@@ -2203,7 +2203,7 @@ EOF
 # Last reviewed: 14 April 2026
 # =============================================================================
 
-build_and_run() {
+run_springboot_project() {
     # --- Safe Variable Defaults ----
     # Defensive defaults - never assume globals are set
     : "${PROJECT_DIR:=/tmp/springboot-${APP_NAME}}"
@@ -2351,7 +2351,7 @@ show_spring_boot_help() {
 }
 
 # =============================================================================
-# source_user_shell_config() - Safely source user shell configuration
+# util_source_user_shell_config() - Safely source user shell configuration
 # =============================================================================
 #
 # Purpose:
@@ -2388,7 +2388,7 @@ show_spring_boot_help() {
 # It is intentionally verbose with heavy comments following CIAO style.
 # =============================================================================
 
-source_user_shell_config() {
+util_source_user_shell_config() {
     # Defensive safe defaults - repeated on purpose
     : "${QUIET:=0}"
     : "${JSON:=0}"
@@ -2460,7 +2460,7 @@ main_spring_boot_app() {
     # <<< IMPORTANT: Source user shell configuration >>>
     # This must happen early so that PATH, SDKMAN, and user environment
     # are available for ALL sub-commands (about, run, version-check, etc.)
-    source_user_shell_config
+    util_source_user_shell_config
 
     local cmd="run"
 
@@ -2578,7 +2578,7 @@ main_spring_boot_app() {
     fi
 
     # Normal build + run
-    build_and_run
+    run_springboot_project
 }
 
 # Call the main function
