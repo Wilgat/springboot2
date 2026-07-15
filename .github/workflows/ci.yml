@@ -1,0 +1,70 @@
+# =============================================================================
+# CI — springboot2 Type 0 + domain shell CLI
+# =============================================================================
+# Runs the POSIX test suite (syntax, CLI surface, install lifecycle against a
+# local HTTP channel, domain --no-run with stub toolchain). No secrets, no
+# elevated privileges, no public download of the product under test.
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Shell tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prerequisites
+        run: |
+          set -eu
+          command -v sh
+          command -v curl
+          command -v python3
+          command -v sha256sum
+          command -v grep
+          sh --version 2>/dev/null || true
+          python3 --version
+          curl --version | head -n1
+
+      - name: Ship unit present
+        run: |
+          set -eu
+          test -f ./springboot2
+          test -f ./springboot2.sha256
+          chmod +x ./springboot2
+
+      - name: Companion digest matches ship unit
+        run: |
+          set -eu
+          expected=$(awk '{print $1}' ./springboot2.sha256 | tr -d ' \n\r\t')
+          actual=$(sha256sum ./springboot2 | awk '{print $1}')
+          echo "expected=${expected}"
+          echo "actual=${actual}"
+          test "${expected}" = "${actual}"
+
+      - name: Run test suite
+        run: |
+          set -eu
+          chmod +x ./tests/run.sh
+          ./tests/run.sh

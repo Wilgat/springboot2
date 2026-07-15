@@ -155,12 +155,16 @@ SH=bash
 # -------- Repository source (used for self-update / installation) ------------
 REPO_USER="Wilgat"
 REPO_NAME="springboot2"
-SCRIPT_URL="https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}"
+# Allow CI / operators to override channel (local HTTP); default is public raw URL
+: "${SCRIPT_URL:=https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}}"
 
 # ----------------------------------- Force Flags  ----------------------------
 : "${FORCE_USER:=0}"
 : "${FORCE_GLOBAL:=0}"
 : "${FORCE_REINSTALL:=0}"
+
+# Optional strict pin (Shape B). Empty → Shape A companion ${SCRIPT_URL}.sha256
+: "${CHECKSUM:=}"
 
 # ----------------------------- Safe Defaults & Paths -------------------------
 : "${HOME:="/tmp"}"
@@ -885,7 +889,8 @@ version_check() {
     local_version=$(get_installed_version)
 
     if [ "${JSON}" -eq 1 ]; then
-        output_json "version_check" \
+        # $2 must be message (empty allowed); keys follow — do not put key names in message slot
+        output_json "version_check" "" \
             "current_version" "$VERSION" \
             "local_installed_version" "$local_version" \
             "remote_version" "$REMOTE_VERSION" \
@@ -1094,9 +1099,9 @@ self_uninstall() {
 
     local removed=0
 
-    if [ -z "$bin_path" ]; then
+    if [ -z "$bin_path" ] || [ ! -f "$bin_path" ]; then
         if [ "${JSON}" -eq 1 ]; then
-            output_json "success" "message" "${APP_NAME} is not installed. Nothing to uninstall."
+            output_json "success" "${APP_NAME} is not installed. Nothing to uninstall."
         else
             if [ "${FORCE_REINSTALL:-0}" -eq 1 ] || [ "${FORCE_USER:-0}" -eq 1 ] || [ "${FORCE_GLOBAL:-0}" -eq 1 ]; then
                 warn "${APP_NAME} is not installed. Nothing to uninstall."
@@ -1107,23 +1112,24 @@ self_uninstall() {
         return 0
     fi
 
-    # Confirm before removal (unless --force or non-interactive)
+    # Confirm before removal (unless --force / FORCE_REINSTALL)
     # We use prompt_yes_no() instead of raw printf to:
     #   1. Enforce single source of truth (all output goes through output_text())
     #   2. Automatically respect --quiet and --json modes
     #   3. Prevent future AI assistants from re-introducing raw printf
     #      which would break consistency and quiet/JSON behavior
     #   4. Keep color handling and TTY detection centralized
+    # Non-interactive / JSON without --force MUST fail closed (confirm_required), not fake success.
     if [ "${FORCE_REINSTALL:-0}" -eq 0 ]; then
         if prompt_yes_no "This will remove: ${bin_path}"; then
             :  # user confirmed yes → continue with uninstall
         else
             if [ "${JSON}" -eq 1 ]; then
-                output_json "success" "message" "Uninstall cancelled by user."
+                output_json_error "Confirmation required; re-run with --force to uninstall" "confirm_required"
             else
                 msg "Uninstall cancelled by user."
             fi
-            return 0 
+            return 1
         fi
     fi
 
@@ -1158,7 +1164,7 @@ self_uninstall() {
     fi
 
     if [ "${JSON}" -eq 1 ]; then
-        output_json "success" "message" "${APP_NAME} has been uninstalled."
+        output_json "success" "${APP_NAME} has been uninstalled." "path" "${bin_path}"
     else
         success "${APP_NAME} has been uninstalled."
     fi
@@ -1308,11 +1314,146 @@ add_to_shell_path() {
 # Intentionality.
 # =============================================================================
 
+# =============================================================================
+# file_sha256() - SHA-256 hex digest of a file (portable tool chain)
+# =============================================================================
+# Return via stdout for $(file_sha256 path) — not product UI messaging.
+# =============================================================================
+file_sha256() {
+    local file="${1-}" dig=""
+    if [ -z "${file}" ] || [ ! -f "${file}" ]; then
+        return 1
+    fi
+    if command -v sha256sum >/dev/null 2>&1; then
+        dig=$(sha256sum "${file}" 2>/dev/null | awk '{ print $1; exit }')
+    elif command -v shasum >/dev/null 2>&1; then
+        dig=$(shasum -a 256 "${file}" 2>/dev/null | awk '{ print $1; exit }')
+    elif command -v openssl >/dev/null 2>&1; then
+        dig=$(openssl dgst -sha256 "${file}" 2>/dev/null | awk '{ print $NF; exit }')
+    else
+        return 1
+    fi
+    if [ -z "${dig}" ]; then
+        return 1
+    fi
+    printf '%s\n' "${dig}"
+    return 0
+}
+
+# =============================================================================
+# verify_download_integrity() - Shape A companion + optional CHECKSUM pin
+# =============================================================================
+# After download to $1: if CHECKSUM set → strict pin match; else fetch
+# ${SCRIPT_URL}.sha256 companion (first field), fail closed on mismatch,
+# warn+continue if companion missing. Sets AUTO_CHECKSUM_OK=1 on match.
+# =============================================================================
+verify_download_integrity() {
+    local tmp_file="$1"
+    local actual expected sha_file http_code
+    : "${SCRIPT_URL:=}"
+    : "${CHECKSUM:=}"
+    : "${JSON:=0}"
+    AUTO_CHECKSUM_OK=0
+
+    actual=$(file_sha256 "${tmp_file}") || actual=""
+    if [ -z "${actual}" ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            output_json_error "Cannot compute SHA-256 of download (need sha256sum/shasum/openssl)" "checksum_tool_missing"
+        else
+            error "Cannot compute SHA-256 of download (need sha256sum/shasum/openssl)"
+        fi
+        return 1
+    fi
+
+    # Shape B: strict user pin
+    if [ -n "${CHECKSUM}" ]; then
+        if [ "${JSON}" -eq 0 ]; then
+            info "Verifying download against provided CHECKSUM..."
+            info "Expected SHA-256: ${CHECKSUM}"
+            info "Actual SHA-256:   ${actual}"
+        fi
+        if [ "${CHECKSUM}" = "${actual}" ]; then
+            AUTO_CHECKSUM_OK=1
+            if [ "${JSON}" -eq 0 ]; then
+                success "Checksum verification passed (user-provided CHECKSUM)."
+            fi
+            return 0
+        fi
+        if [ "${JSON}" -eq 1 ]; then
+            output_json_error "Checksum verification failed (provided CHECKSUM does not match)" "checksum_mismatch"
+        else
+            error "Checksum verification failed. The downloaded file does not match the provided CHECKSUM."
+        fi
+        return 1
+    fi
+
+    # Shape A: companion ${SCRIPT_URL}.sha256
+    if [ "${JSON}" -eq 0 ]; then
+        info "No CHECKSUM pin → automatic integrity via companion ${SCRIPT_URL}.sha256"
+        info "Companion link: ${SCRIPT_URL}.sha256"
+    fi
+
+    sha_file=$(mktemp -t "${APP_NAME}.sha256.XXXXXX") || {
+        if [ "${JSON}" -eq 1 ]; then
+            output_json_error "Failed to create temporary file for checksum" "io_error"
+        else
+            error "Failed to create temporary file for checksum"
+        fi
+        return 1
+    }
+
+    http_code=""
+    if command -v curl >/dev/null 2>&1; then
+        http_code=$(curl -fsSL -w "%{http_code}" "${SCRIPT_URL}.sha256" -o "${sha_file}" 2>/dev/null) || http_code="000"
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -qO "${sha_file}" "${SCRIPT_URL}.sha256" 2>/dev/null; then
+            http_code="200"
+        else
+            http_code="404"
+        fi
+    else
+        http_code="000"
+    fi
+
+    if [ "${http_code}" = "200" ]; then
+        expected=$(awk 'NF { print $1; exit }' "${sha_file}" 2>/dev/null)
+        rm -f "${sha_file}" 2>/dev/null || true
+        if [ -n "${expected}" ] && [ "${expected}" = "${actual}" ]; then
+            AUTO_CHECKSUM_OK=1
+            if [ "${JSON}" -eq 0 ]; then
+                info "Expected SHA-256: ${expected}"
+                info "Actual SHA-256:   ${actual}"
+                success "Automatic checksum result: PASS (match ${SCRIPT_URL}.sha256)."
+            fi
+            return 0
+        fi
+        if [ "${JSON}" -eq 1 ]; then
+            output_json_error "Automatic checksum verification failed" "checksum_mismatch"
+        else
+            info "Expected SHA-256: ${expected:-"(empty)"}"
+            info "Actual SHA-256:   ${actual}"
+            error "Checksum verification failed (mismatch with ${SCRIPT_URL}.sha256). Installation aborted for security."
+        fi
+        return 1
+    fi
+
+    rm -f "${sha_file}" 2>/dev/null || true
+    if [ "${JSON}" -eq 0 ]; then
+        warn "No .sha256 companion at ${SCRIPT_URL}.sha256 → continuing without automatic verification."
+    fi
+    return 0
+}
+
+# =============================================================================
+# perform_self_install() - Main self-installation logic
+# =============================================================================
+
 perform_self_install() {
     
     : "${GLOBAL_BIN:=/usr/local/bin}"
     : "${USER_BIN:=${HOME}/.local/bin}"
     : "${INSTALL_PATH:=${GLOBAL_BIN}/${APP_NAME}}"
+    : "${AUTO_CHECKSUM_OK:=0}"
 
     if [ "$(id -u)" -eq 0 ]; then
         IS_ROOT=1
@@ -1332,7 +1473,7 @@ perform_self_install() {
 
     if is_installed && [ "${FORCE_REINSTALL}" -eq 0 ]; then
         if [ "${JSON}" -eq 1 ]; then
-            output_json "success" "message" "${APP_NAME} is already installed."
+            output_json "success" "${APP_NAME} is already installed."
         else
             success "${APP_NAME} is already installed. Use --force to override."
         fi
@@ -1404,6 +1545,12 @@ perform_self_install() {
         return 1
     fi
 
+    # Integrity: optional CHECKSUM pin (strict) or companion ${SCRIPT_URL}.sha256 (Shape A)
+    if ! verify_download_integrity "${tmp_file}"; then
+        rm -f "${tmp_file}"
+        return 1
+    fi
+
     chmod +x "${tmp_file}" 2>/dev/null || true
 
     rm -f "${INSTALL_PATH}" 2>/dev/null
@@ -1423,9 +1570,13 @@ perform_self_install() {
     fi
     
     if [ "${JSON}" -eq 1 ]; then
-        output_json "success" "message" "${APP_NAME} ${REMOTE_VERSION} successfully installed to ${INSTALL_PATH}"
+        output_json "success" "${APP_NAME} ${REMOTE_VERSION} successfully installed to ${INSTALL_PATH}" \
+            "path" "${INSTALL_PATH}" "version" "${REMOTE_VERSION}"
     else
         success "${APP_NAME} ${REMOTE_VERSION} successfully installed to ${INSTALL_PATH}"
+        if [ "${AUTO_CHECKSUM_OK:-0}" -eq 1 ]; then
+            success "Download integrity: cryptographically verified (companion digest)."
+        fi
     fi
     return 0
 }
@@ -1513,14 +1664,14 @@ maybe_install() {
     if [ -t 0 ] && [ -t 1 ]; then 
         # Use single source of truth for interactive prompt
         if prompt_yes_no "Install ${APP_NAME} ${VERSION} now?"; then
-            perform_self_install
+            perform_self_install || exit $?
             exit 0
         else
             msg "Installation skipped by user."
             return 0
         fi
     else
-        perform_self_install
+        perform_self_install || exit $?
         exit 0
     fi
 }
@@ -2315,11 +2466,14 @@ main_spring_boot_app() {
 
     # === AUTO-INSTALL FOR ONE-LINER (curl | bash) ===
     # This MUST stay at the top before any argument parsing
+    # Propagate install failure (non-zero) — never exit 0 on failed download.
     if ! is_installed && [ $# -eq 0 ]; then
         if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
-            perform_self_install
+            perform_self_install || exit $?
+            exit 0
         else
             maybe_install
+            # maybe_install exits on success install; if it returns, continue or fail
         fi
     fi
 
@@ -2338,9 +2492,10 @@ main_spring_boot_app() {
                 ;;
             --quiet|-q)     QUIET=1 ;;
             --json)         JSON=1; QUIET=1 ;;
-            --force)        FORCE=1 ;;
+            --force)        FORCE=1; FORCE_REINSTALL=1 ;;
             --force-user)   FORCE_USER=1 ;;
-            --force-root)   FORCE_ROOT=1 ;;
+            --force-root)   FORCE_ROOT=1; FORCE_GLOBAL=1 ;;
+            --reset)        FORCE_REINSTALL=1; RESET_PROJECT=1 ;;
             --help|-h)      cmd="help";;
             --*)            ;;
             -*)             ;;
@@ -2362,26 +2517,36 @@ main_spring_boot_app() {
 
         version-check)
             version_check
-            exit 0
+            exit $?
             ;;
 
         self-update)
             self_update
-            exit 0
+            exit $?
             ;;
 
         self-uninstall)
             self_uninstall
-            exit 0 ;;
+            exit $?
+            ;;
 
-        about)
+        about|status)
+            # status is domain diagnostics alias (same rich about surface)
             show_about_spring_boot_app
-            exit 0
+            exit $?
             ;;
 
         help)
             show_spring_boot_help
             exit 0
+            ;;
+
+        reinstall)
+            # Force reinstall of CLI binary then fall through to domain pipeline
+            FORCE_REINSTALL=1
+            FORCE=1
+            perform_self_install || exit $?
+            # after reinstall, continue domain setup (cmd treated as run)
             ;;
 
         run)
