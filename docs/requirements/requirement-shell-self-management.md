@@ -44,7 +44,7 @@ User-facing names **MUST** be stable unless this requirement is explicitly revis
 | `self-uninstall` | Remove the managed CLI binary and clean PATH **only when safe** | `--force` (skip interactive confirm when designed) |
 | `about` | Diagnostics and version / install context | `--quiet`, `--json` |
 
-Shell implementation **SHOULD** keep install/lifecycle and dispatch callable as clear helpers. **This product** uses live names (`perform_self_install`, `self_update`, `main_spring_boot_app`, …); seed `inst_*`/`app_*` names are target architecture. Domain helpers (`setup_*`) are allowed for Spring Boot specialization.
+Shell implementation **SHOULD** keep install/lifecycle and dispatch callable as clear helpers. **This product** uses live names (`perform_self_install`, `self_update`, `main_spring_boot_app`, …); seed `inst_*`/`app_*` are **not** product law (§3.1 option 2). Domain helpers (`setup_*` / `run_springboot_project`) are allowed for Spring Boot specialization.
 
 Related Type 0 commands (`version`, `install`, `help`) are owned by `requirement-shell-cli-interface.md` but **MUST** stay consistent with this lifecycle model.
 
@@ -116,17 +116,17 @@ Root may write global install path; non-root uses user path. Do not assume root 
 | **Product / binary** | `springboot2` (`APP_NAME`) |
 | **Implementation file** | Repo root `./springboot2` |
 | **Dispatcher** | `main_spring_boot_app` routes `version-check` → `version_check`; `self-update` → `self_update`; `self-uninstall` → `self_uninstall`; `about` → `show_about_spring_boot_app` |
-| **Install orchestrator SSOT** | `perform_self_install` (+ prepare / download with or without checksum / atomic install) |
-| **Version compare** | `version_gt` (pure POSIX); local version via `get_installed_version` |
+| **Install orchestrator SSOT** | `perform_self_install` (download → `verify_download_integrity` → place binary) |
+| **Version compare** | `version_gt`; local version via `get_installed_version` |
 | **Install presence** | `is_installed` |
 | **Paths** | `GLOBAL_BIN` default `/usr/local/bin`; `USER_BIN` default `${HOME}/.local/bin` |
 | **Repository identity** | `REPO_USER` default `Wilgat`; `REPO_NAME` default `springboot2` |
-| **Release channel** | `SCRIPT_URL` Config default composed as `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}` (this project: `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` — product channel SSOT; override `SCRIPT_URL` or `REPO_*` via env if needed) |
-| **Strict digest pin** | Runtime `CHECKSUM` when set in process env → `perform_self_install_download_with_checksum` (secondary install-path only; **not** shown in `help`/`about`; see automatic-checksum requirement) |
-| **Companion digest** | Default `${SCRIPT_URL}.sha256` via `perform_self_install_download_without_checksum` — law + transparency: `requirement-shell-automatic-checksum.md` |
-| **Force reinstall** | `FORCE_REINSTALL`; CLI `--force` required by CLI interface requirement |
-| **Uninstall steps** | `self_uninstall_determine_bin` → `self_uninstall_confirm_and_remove` → `self_uninstall_cleanup_path` |
-| **PATH ensure** | `path_add_shell` / bash / zsh / fish helpers on user install |
+| **Release channel** | `SCRIPT_URL` with `:=` default composed from `REPO_*` / `APP_NAME` (override via env) |
+| **Strict digest pin** | Runtime `CHECKSUM` → Shape B path inside `verify_download_integrity` (**not** in help/about) |
+| **Companion digest** | Default `${SCRIPT_URL}.sha256` via `verify_download_integrity` — `requirement-shell-automatic-checksum.md` |
+| **Force reinstall** | CLI `--force` → `FORCE=1` **and** `FORCE_REINSTALL=1` in `main_spring_boot_app` |
+| **Uninstall** | `self_uninstall` (bin resolve via `get_install_bin_path`; confirm / `confirm_required`; remove; optional PATH cleanup) |
+| **PATH ensure** | `add_to_shell_path` / `in_path` on user install |
 | **Privilege** | Type 0 only for self-management surface; no dedicated system user |
 | **Version SSOT** | `VERSION` default `2.0.1` in script config block (`VERSION="2.0.1"`) |
 
@@ -142,20 +142,24 @@ Root may write global install path; non-root uses user path. Do not assume root 
 4. **`about`:** Human diagnostics + JSON about object; no secrets; **no `CHECKSUM` name/value**.  
 5. **Shared install path:** Self-update **must not** introduce a parallel curl-to-final-path overwrite outside `perform_self_install*`.
 
-#### Compliance notes (implementation status)
+#### Compliance notes (implementation status) — re-read disk 2026-07-15
 
 | Item | Status |
 |------|--------|
-| Downgrade gate via `version_gt` (refuse unless force) | **Partial** — `self_update` has newer-local gate; force path incomplete vs `FORCE_REINSTALL` wiring |
-| CLI `--force` → `FORCE=1` **and** `FORCE_REINSTALL=1` | **Gap** — dispatcher sets `FORCE=1` only; uninstall/install reinstall keys use `FORCE_REINSTALL` (self-update sets it internally) |
-| `SCRIPT_URL` default channel URL | **This project:** non-empty product default composed from `REPO_USER` / `REPO_NAME` / `APP_NAME` (`https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2`); product README must show simple literal one-liner(s) from that SSOT; env may still override |
+| Downgrade gate via `version_gt` (refuse unless force) | **Implemented** — newer-local refuses without force; `--force` sets `FORCE_REINSTALL` for deliberate path |
+| CLI `--force` → `FORCE=1` **and** `FORCE_REINSTALL=1` | **Implemented** — `main_spring_boot_app` flag parse |
+| Uninstall JSON without force | **Implemented** — `confirm_required` + non-zero; binary remains |
+| Uninstall `--force` removes binary | **Implemented** — suite regression |
+| Integrity on install/self-update download | **Implemented** — `verify_download_integrity` |
+| `SCRIPT_URL` default channel URL | **Implemented** — product default + env override (`:=`) |
+| Residual | Downgrade JSON uses success “newer local” wording (not always `downgrade_blocked` code) — live contract; optional A-parity later |
 
 ### 2.9 Why This Requirement Exists (Direct CIAO Alignment)
 
 - **CIAO Principle 1 – Caution** (https://github.com/cloudgen/ciao): Block silent downgrade and unsafe uninstall; verify downloads.  
 - **CIAO Principle 2 – Intentional** (https://github.com/cloudgen/ciao): Separate version-check, self-update, self-uninstall, and about.  
 - **CIAO Principle 3 – Anti-fragile** (https://github.com/cloudgen/ciao): Per-user and global installs; temp + atomic replace survive partial failure.  
-- **CIAO Principle 4/12 – Output & traceability** (https://github.com/cloudgen/ciao): Central `out_*`; JSON/human modes.  
+- **CIAO Principle 4/12 – Output & traceability** (https://github.com/cloudgen/ciao): Central Output SSOT (`output_*`); JSON/human modes.  
 - **CIAO Principle 8 – Least privilege** (https://github.com/cloudgen/ciao): Type 0 invoker default for CLI lifecycle.  
 - **CIAO Principle 9 – Safe temp files** (https://github.com/cloudgen/ciao): `mktemp`, cleanup on error.  
 - **CIAO Principle 18 – Over-protect** (https://github.com/cloudgen/ciao): Digest, atomicity, PATH empty-dir check are sacred.
@@ -216,7 +220,8 @@ Work claiming self-management support for springboot2 is **not done** if any of 
 | `docs/requirements/requirement-shell-cli-interface.md` | Command surface, flags, dispatcher |
 | `docs/requirements/requirement-shell-idempotency.md` | Re-run safety for ensure ops |
 | `docs/requirements/requirement-shell-output-requirements.md` | Lifecycle messaging / quiet / JSON |
-| `docs/requirements/requirement-shell-modular-function-design.md` | `inst_*` / `out_*` ownership |
+| `docs/requirements/requirement-shell-modular-function-design.md` | Live function families (`output_*`, lifecycle, util) |
+| `docs/requirements/requirement-shell-automatic-checksum.md` | Companion / pin integrity on install path |
 | `docs/requirements/index.md` | Registry SSOT |
 | `./springboot2` | Implementation under test |
 

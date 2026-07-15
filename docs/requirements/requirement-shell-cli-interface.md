@@ -64,7 +64,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 
 1. **Single entry:** A single main dispatcher (e.g. `main_spring_boot_app`) **MUST** parse global flags and route commands.
 2. **Unknown command:** **MUST** fail loudly with a clear error and pointer to `help` (via output SSOT).
-3. **Zero-arg install-ensure:** Empty argv **MUST** mean install-ensure (not help). Not installed → install (TTY may confirm; non-interactive / quiet / json auto). Already installed (global or local) → success no-op (“already installed”), not help and not blind reinstall. Full contract: `requirement-shell-cli-zero-arguments.md`.
+3. **Zero-arg hybrid (this product):** Empty argv **MUST NOT** dump help. **Not installed** → install-ensure; **installed** → domain default run (not pure install no-op). Full contract: `requirement-shell-cli-zero-arguments.md` hybrid supersession + `requirement-springboot2-domain.md`.
 4. **Idempotent install skip:** Install **MUST** no-op when already installed unless force/reinstall policy is set.
 5. **No raw user I/O:** User-facing messages **MUST** go through the centralized `out_*` system (see output template/term).
 
@@ -108,14 +108,17 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 | Command | Type | Handler (current) | Required behavior |
 |---------|------|-------------------|-------------------|
-| *(no args — empty argv)* | Type 0 | `main_spring_boot_app` → `maybe_install` / `perform_self_install` | **Type O install-ensure** (not Type N help): not-installed / local / global; never help; see `requirement-shell-cli-zero-arguments.md` |
-| `install` | Type 0 | `perform_self_install` | Install binary for current privilege (root→global, user→local); idempotent unless force reinstall |
-| `version` | Type 0 | `main_spring_boot_app` / version dispatch in `main_spring_boot_app` | Print local version; JSON object when `--json` |
-| `about` | Type 0 | `show_about_spring_boot_app` | Diagnostics: install presence, global/local paths, user, shell, TTY; JSON when `--json`; **no `CHECKSUM` field** |
-| `version-check` | Type 0 | `version_check` | Compare local vs remote `VERSION` from `SCRIPT_URL`; fail clearly if URL unset/unreachable |
+| *(no args — empty argv)* | Type 0 / domain | Hybrid: **not installed** → install-ensure; **installed** → domain default `run` — never help; see `requirement-shell-cli-zero-arguments.md` hybrid supersession |
+| `install` | Type 0 | *(no separate case)* | First install via empty argv auto-install only (not a routed subcommand) |
+| `version` | Type 0 | version dispatch in `main_spring_boot_app` | Print local version; JSON object when `--json` |
+| `about` | Type 0 | `show_about_spring_boot_app` | Diagnostics incl. domain fields; JSON when `--json`; **no `CHECKSUM` field** |
+| `status` | Type 0 / domain | `show_about_spring_boot_app` (alias) | Same diagnostics surface as about |
+| `version-check` | Type 0 | `version_check` | Compare local vs remote `VERSION` from `SCRIPT_URL` |
 | `self-update` | Type 0 | `self_update` | Fetch remote version; reinstall when policy allows; reuse install primitives |
-| `self-uninstall` | Type 0 | `self_uninstall` | Remove managed binary; PATH cleanup only if `~/.local/bin` empty (user installs) |
-| `help` | Type 0 | `show_spring_boot_help` | Full usage in human mode; short JSON note in JSON mode; Environment lists channel vars only — **not** `CHECKSUM` |
+| `self-uninstall` | Type 0 | `self_uninstall` | Remove managed binary; confirm_required without force |
+| `reinstall` | Type 0 / domain | `FORCE_REINSTALL=1` + `perform_self_install` then domain pipeline | Force CLI reinstall then continue domain (often with `--no-run` in automation) |
+| `run` | domain | domain pipeline | Explicit domain setup/run |
+| `help` | Type 0 | `show_spring_boot_help` | Full usage; domain flags + Type 0; **not** `CHECKSUM` |
 
 #### Global flags (normative wiring for this project)
 
@@ -124,15 +127,18 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `--quiet`, `-q` | Set `QUIET=1` in `main_spring_boot_app` |
 | `--json` | Set `JSON=1` and `QUIET=1` in `main_spring_boot_app` |
 | `--debug` | Set `DEBUG=1` in `main_spring_boot_app` |
-| `--force` | Parsed by `main_spring_boot_app` → `FORCE=1` and `FORCE_REINSTALL=1`; used by install reinstall, self-update (incl. deliberate downgrade), and uninstall confirm skip |
+| `--force` | Parsed by `main_spring_boot_app` → `FORCE=1` and `FORCE_REINSTALL=1`; uninstall, project regenerate, self-update force paths |
+| `--reset` | Sets `FORCE_REINSTALL=1` (and `RESET_PROJECT=1`); domain project wipe/regenerate |
+| `--project-dir`, `--no-run` | Domain flags — `requirement-springboot2-domain.md` |
+| `--force-user`, `--force-root` | Privilege force flags as wired |
 
 #### Dispatcher acceptance criteria (this project)
 
 1. Unknown token after flag parse → `die` with pointer to `springboot2 help`.  
-2. Zero-arg → install-ensure: not installed → install; already installed (local or global) → already-installed success (not help); failures non-zero.  
-3. Command routing table in `main_spring_boot_app` **must** include every row in the command table above.  
-4. Help text **must** stay aligned with that table (no orphan commands, no listed-but-unrouted commands).  
-5. User-facing strings **must not** use raw `echo`/`printf` outside Output SSOT (protected low-level helpers excepted only if already CIAO-marked and not for general messages).
+2. Empty argv **hybrid** (not Type N help): not installed → install-ensure; installed → domain run — see zero-arguments specialization.  
+3. Command routing table in `main_spring_boot_app` **must** include every supported command row above (except intentional non-command empty-argv install).  
+4. Help text **must** stay aligned with routed commands/flags (no orphan listings).  
+5. User-facing strings **must not** use raw `echo`/`printf` outside Output SSOT.
 
 #### Explicitly out of scope until a new requirement
 
@@ -145,7 +151,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 - **CIAO Principle 1 – Caution** (https://github.com/cloudgen/ciao): Unknown commands fail loud; force and prompts gate destructive ops; quiet/json never hide fatal errors incorrectly.  
 - **CIAO Principle 2 – Intentional** (https://github.com/cloudgen/ciao): Every command has one privilege type, one handler, and documented flags.  
 - **CIAO Principle 3 – Anti-fragile** (https://github.com/cloudgen/ciao): Works under TTY, `curl | sh`, quiet, and JSON; root vs user install paths.  
-- **CIAO Principle 4 / 12 – Single source of output & security/traceability** (https://github.com/cloudgen/ciao): Central `out_*`; JSON/human separation.  
+- **CIAO Principle 4 / 12 – Single source of output & security/traceability** (https://github.com/cloudgen/ciao): Central Output SSOT (`output_*`); JSON/human separation.  
 - **CIAO Principle 5 – Single point of entry** (https://github.com/cloudgen/ciao): `main_spring_boot_app` is the dispatcher SSOT.  
 - **CIAO Principle 8 – Least-privilege user** (https://github.com/cloudgen/ciao): Type 0 default for CLI self-care; no invented system-user requirement for binary lifecycle.  
 - **CIAO Principle 14 – Interactive vs non-interactive** (https://github.com/cloudgen/ciao): No hang in non-interactive; prompts only when appropriate.  
@@ -203,17 +209,18 @@ This requirement is satisfied for the springboot2 shell CLI when all of the foll
 | `docs/requirements/requirement-shell-self-management.md` | Lifecycle command semantics |
 | `docs/requirements/requirement-shell-output-requirements.md` | Output SSOT and channels |
 | `docs/requirements/requirement-shell-interactive-vs-noninteractive.md` | TTY / automation mode behavior |
-| `docs/requirements/requirement-shell-cli-zero-arguments.md` | Empty argv install-ensure (not installed / local / global) |
+| `docs/requirements/requirement-shell-cli-zero-arguments.md` | Empty argv hybrid (install when absent; domain when installed) |
+| `docs/requirements/requirement-springboot2-domain.md` | Domain commands/flags / pipeline |
 | `docs/requirements/requirement-shell-idempotency.md` | Re-run safety for ensure ops |
-| `docs/requirements/requirement-shell-modular-function-design.md` | Prefix ownership (`app_`, `inst_`, `out_*`) |
+| `docs/requirements/requirement-shell-modular-function-design.md` | Live function families (`output_*`, lifecycle, util, domain) |
 | `docs/requirements/index.md` | Registry SSOT |
 | `./springboot2` | Implementation under test |
 
 ---
 
-**Last Updated**: 2026-07-12  
+**Last Updated**: 2026-07-15  
 **Owner**: springboot2 project maintainers  
-**Alignment**: Registry `docs/requirements/index.md`; CIAO Principles 1, 2, 3, 5, 8, 14, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
+**Alignment**: Registry `docs/requirements/index.md`; CIAO Principles 1, 2, 3, 5, 8, 14, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite). R1–R6 Notes sync.
 
 
 **Empty argv (this product):** See `requirement-shell-cli-zero-arguments.md` § Empty argv specialization — installed empty argv is **domain run**, not install-ensure no-op.
@@ -240,11 +247,12 @@ In addition to Type 0 lifecycle, **springboot2** exposes domain setup/run:
 
 | Command / flag | Behavior (live) |
 |----------------|-----------------|
-| empty argv when installed / `run` | Setup env + project + build/run |
+| empty argv when installed / `run` | Setup env + project + `run_springboot_project` |
 | `--project-dir <path>` | Project directory |
 | `--no-run` | Setup only |
-| `--reset` | Documented in help/README; verify dispatcher coverage on disk |
-| `status` / `reinstall` | May appear in help — **Gap** if not routed in `main_spring_boot_app` |
-| `install` subcommand | **Not** a separate case; auto-install when not installed + empty argv |
+| `--reset` | **Implemented** — sets `FORCE_REINSTALL` for project regenerate |
+| `status` | **Implemented** — about alias |
+| `reinstall` | **Implemented** — force install then domain pipeline |
+| `install` subcommand | **Intentional absent** — first install via empty argv only |
 
 Type 0-only “no domain” claims are **not** sufficient product law for this ship unit.

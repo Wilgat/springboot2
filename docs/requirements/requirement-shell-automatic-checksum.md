@@ -1,5 +1,5 @@
 **file**: docs/requirements/requirement-shell-automatic-checksum.md  
-**Status**: Active (Version 1.0.0)  
+**Status**: Active (Version 1.1.0)  
 **Philosophy**: CIAO / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered)
 
 ## 1. Purpose
@@ -126,18 +126,18 @@ When this requirement is **Active** for the product:
 |------|------------------------|
 | **Product / binary** | `springboot2` (`APP_NAME`) |
 | **Implementation file** | Repo root `./springboot2` |
-| **Orchestrator** | `perform_self_install` |
-| **Automatic download helper** | `perform_self_install_download_without_checksum` (name = without **env** pin; still performs companion verify) |
-| **Strict pin helper** | `perform_self_install_download_with_checksum` when runtime `CHECKSUM` non-empty (not shown in help/about) |
-| **Atomic install** | `perform_self_install_atomic_install` |
-| **Channel SSOT** | `SCRIPT_URL` default `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}` → `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
-| **Companion URL** | `${SCRIPT_URL}.sha256` → `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2.sha256` |
-| **In-repo companion** | `springboot2.sha256` (bare 64-char hex) |
-| **Algorithm** | SHA-256 via `sha256sum` |
+| **Orchestrator** | `perform_self_install` (download then integrity then place binary) |
+| **Integrity helper** | `verify_download_integrity` — Shape A companion when `CHECKSUM` empty; Shape B pin when `CHECKSUM` set |
+| **Digest helper** | `file_sha256` (sha256sum / shasum / openssl; return-via-stdout) |
+| **Channel SSOT** | `SCRIPT_URL` with `:=` default `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}` |
+| **Companion URL** | `${SCRIPT_URL}.sha256` |
+| **In-repo companion** | `springboot2.sha256` (bare 64-char hex; CI asserts match) |
+| **Algorithm** | SHA-256 via `file_sha256` |
+| **Match flag** | `AUTO_CHECKSUM_OK=1` on companion/pin match |
 | **Missing sidecar policy** | Warn + continue (best-effort) |
-| **Mismatch policy** | Abort (human `die` / JSON `checksum_mismatch`) |
+| **Mismatch policy** | Abort (human error path / JSON `checksum_mismatch`) |
 | **Self-update** | `self_update` → `perform_self_install` (same integrity path) |
-| **Output SSOT** | `info` / `success` / `warn` / `die` / `output_json_error` |
+| **Output SSOT** | `info` / `success` / `warn` / `error` / `die` / `output_json_error` |
 
 #### Normative acceptance behaviors (this project)
 
@@ -148,19 +148,22 @@ When this requirement is **Active** for the product:
 5. **`CHECKSUM` set incorrectly:** abort.  
 6. **Product README:** automatic mode primary; no newcomer-primary external pin recipe.
 
-#### Compliance notes (implementation status)
+#### Compliance notes (implementation status) — re-read disk 2026-07-15
 
 | Item | Status |
 |------|--------|
-| Automatic fetch of `${SCRIPT_URL}.sha256` when pin unset | **Gap** — `perform_self_install` downloads script only; no companion verify |
-| Abort on mismatch | **Gap** — no checksum path |
-| Warn + continue on missing sidecar | **Gap** — no sidecar fetch |
-| Show companion **link** in human mode | **Gap** |
-| Show expected **value** and **result** (pass/fail with digests) | **Gap** |
-| `downloaded_checksum_ok` / auto-ok flag on match | **Gap** — not present |
-| README leads with automatic mode | **Mostly present**; must not reintroduce env-first pin as primary (agents: `skill-write-readme`) |
-| `help` / `about` omit `CHECKSUM` | **Aligned** — help does not list CHECKSUM |
-| Same-origin CHECKSUM example as “highest assurance” | **Must not** — document as advanced/out-of-band only |
+| Automatic fetch of `${SCRIPT_URL}.sha256` when pin unset | **Implemented** — `verify_download_integrity` after download |
+| Abort on mismatch | **Implemented** — human + JSON `checksum_mismatch` |
+| Warn + continue on missing sidecar | **Implemented** |
+| Show companion **link** in human mode | **Implemented** — “Companion link: …” |
+| Show expected **value** and **result** (pass/fail with digests) | **Implemented** — Expected/Actual SHA-256 + “Automatic checksum result: PASS” |
+| Match flag on success | **Implemented** — `AUTO_CHECKSUM_OK` + human “cryptographically verified” line |
+| Optional `CHECKSUM` pin (Shape B) | **Implemented** — strict match/mismatch; not listed in help/about |
+| Regression suite | **Implemented** — `tests/test_install_lifecycle.sh` companion + pin cases |
+| README leads with automatic mode | **Mostly present**; must not reintroduce env-first pin as primary |
+| `help` / `about` omit `CHECKSUM` | **Aligned** |
+| Same-origin CHECKSUM as “highest assurance” | **Must not** — advanced/out-of-band only |
+| Residual | Full multi-helper seed split (`*_download_with/without_checksum`) not used — single `verify_download_integrity` is product law |
 
 ### 2.8 Why This Requirement Exists (Direct CIAO Alignment)
 

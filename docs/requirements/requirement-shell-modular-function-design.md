@@ -301,4 +301,4 @@ A modular-structure change for springboot2 is **not done** if any of the followi
 | Domain | `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`, `check_alpine_requirements` |
 | PATH | `add_to_shell_path`, `in_path`, per-shell helpers as present |
 
-Compliance claiming seed-prefix inventory as Implemented is **false** until rename or notes mark **target vs live**.
+Compliance claiming seed-prefix inventory as Implemented is **false**. Live families above are product law (§3.1 option 2; P1–P7 closed).

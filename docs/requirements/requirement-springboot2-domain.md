@@ -67,7 +67,7 @@ Failures **MUST** exit non-zero via output SSOT (`die` / `error`); **MUST NOT** 
 | Force / reinstall policy **on** (`FORCE_REINSTALL=1` or equivalent documented flag) | May remove/regenerate project tree and overwrite demo files as designed |
 | Help documents `--reset` | Dispatcher **MUST** parse and honor reset/force project policy **or** help **MUST NOT** advertise it (help↔dispatcher alignment) |
 
-Live code today keys full project wipe/regenerate on `FORCE_REINSTALL` (often from `--force`). Documented `--reset` without wiring is a **Gap** until fixed in code or help.
+Live code keys full project wipe/regenerate on `FORCE_REINSTALL` from `--force` and/or **`--reset`** (dispatcher sets `FORCE_REINSTALL=1` / `RESET_PROJECT=1`).
 
 ### 2.4 Domain flags and commands
 
@@ -81,7 +81,9 @@ Live code today keys full project wipe/regenerate on `FORCE_REINSTALL` (often fr
 | `--force` / force-user / force-root | Privilege and reinstall policy; project regenerate when wired to `FORCE_REINSTALL` |
 | `--quiet` / `-q`, `--json` | Same mode contract as shell output requirements; domain messages go through output SSOT |
 | `run` | Explicit domain pipeline (same as default) |
-| `status` / `reinstall` | **If** listed in help, **MUST** be routed in `main_spring_boot_app`; today **Gap** if help-only |
+| `status` | **Implemented** — routes to `show_about_spring_boot_app` |
+| `reinstall` | **Implemented** — force CLI reinstall then domain pipeline |
+| `--reset` | **Implemented** — force project regenerate via `FORCE_REINSTALL` |
 | Type 0 cmds | `version`, `version-check`, `self-update`, `self-uninstall`, `about`, `help` exit before domain pipeline |
 
 ### 2.5 Alpine / bash
@@ -107,14 +109,17 @@ Live code today keys full project wipe/regenerate on `FORCE_REINSTALL` (often fr
 | Run | `exec java -jar "target/${JAR_NAME}"` after successful package |
 | About extras | Domain-rich diagnostics (SDKMAN, project dir, port) via `show_about_spring_boot_app` |
 
-#### Known Gaps (honest — not Implemented)
+#### Compliance notes (implementation status) — re-read disk 2026-07-15
 
-| Gap | Notes |
-|-----|--------|
-| `--reset` | Documented in help; not clearly wired as distinct flag in dispatcher (force/project path uses `FORCE_REINSTALL`) |
-| `status` / `reinstall` | May appear in help; not routed in `case "${cmd}"` today |
-| `install` subcommand | No separate `install` case; first-time is empty-argv auto-install only |
-| Force → `FORCE_REINSTALL` | Dispatcher sets `FORCE=1` on `--force`; project reset may not see reinstall bit unless wired — verify on disk before claiming Implemented |
+| Item | Status |
+|------|--------|
+| `--reset` → project regenerate | **Implemented** |
+| `status` / `reinstall` routed | **Implemented** |
+| `--force` → `FORCE_REINSTALL=1` | **Implemented** |
+| Empty argv installed = domain pipeline | **Implemented** (hybrid) |
+| Preserve without force | **Implemented** |
+| `install` subcommand | **Intentional absent** — empty-argv first install only |
+| Residual | Real SDKMAN/Java network path not fully mocked beyond suite stubs; production run needs network/toolchain |
 
 ### 2.8 Why This Requirement Exists (Direct CIAO Alignment)
 

@@ -4,7 +4,7 @@
 **Identity SSOT:** ship unit `./springboot2` Project Constants — `APP_NAME="springboot2"`, `VERSION="2.0.1"`, `REPO_USER="Wilgat"`, `REPO_NAME="springboot2"`, `SCRIPT_URL` composed from those. Requirements **must not** invent a different product name, channel, or version.  
 **Workspace state:** Specialized product law — identity SSOT retargeted; Implementation Notes use **live** `./springboot2` helpers; false “Implemented” seed claims demoted to **Gap/Partial** where code lacks them; domain law registered (`requirement-springboot2-domain`).  
 **Live Implementation honesty:** Product naming SSOT = live ship unit families (`output_*`, `perform_self_install`, `main_spring_boot_app`) — **not** bootstrap seed `out_*`/`inst_*`/`app_main` (§3.1 option 2). Empty argv when installed = domain **run**. Automatic checksum Shape A when companion present.  
-**Sufficiency note:** Domain law registered; help↔dispatcher / force / hybrid empty-argv / tests green; Shape A companion + pin CHECKSUM wired; prefix dual-inventory **closed** (§3.1 option 2 — law → live names). Residual: full Shape A publisher process / optional force-downgrade JSON code parity with bootstrap A.  
+**Sufficiency note:** Domain + storage + integrity law registered; help↔dispatcher / force / hybrid empty-argv / Shape A+B checksum / tests green; Implementation Notes re-synced 2026-07-15 (R1–R6). Residual: storage resolver call-site Gap; optional downgrade JSON code A-parity; JSON error on stdout vs stderr.  
 **Updated:** 2026-07-15
 
 | ID / key | Title | Area | Status | Path | Updated |
