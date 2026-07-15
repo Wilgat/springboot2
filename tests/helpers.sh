@@ -171,7 +171,7 @@ ci_stub_domain_toolchain() {
 exit 0
 EOF
     chmod +x "${CI_STUB_BIN}/sdk"
-    # java / mvn: only needed if build_and_run runs; --no-run skips them
+    # java / mvn: only needed if run_springboot_project runs; --no-run skips them
     cat > "${CI_STUB_BIN}/java" <<'EOF'
 #!/bin/sh
 exit 0
