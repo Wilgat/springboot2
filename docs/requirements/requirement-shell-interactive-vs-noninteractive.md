@@ -19,7 +19,7 @@ It defines interactive vs non-interactive behavior for this shell project (globa
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.0` |
+| **VERSION** | `2.3.1` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |

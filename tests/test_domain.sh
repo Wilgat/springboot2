@@ -17,7 +17,7 @@ run_test_domain() {
     require_cmd grep
 
     # --- help documents domain (already partially in CLI; reinforce pin + flags) ---
-    _out=$(sh "${SCRIPT}" help 2>/dev/null)
+    _out=$(bash "${SCRIPT}" help 2>/dev/null)
     assert_contains "domain help: Spring Boot pin" "$_out" "${SPRINGBOOT_VER}"
     assert_contains "domain help: --no-run" "$_out" "--no-run"
     assert_contains "domain help: --project-dir" "$_out" "--project-dir"
@@ -46,7 +46,7 @@ run_test_domain() {
     # Type O-P: empty argv with NO_RUN continues to payload after ship place
     HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" NO_RUN=1 \
-        sh "${SCRIPT}" </dev/null >/dev/null 2>"${_errf}"
+        bash "${SCRIPT}" </dev/null >/dev/null 2>"${_errf}"
     _ec=$?
     assert_eq "domain suite: empty-argv combined ensure exit 0" 0 "$_ec"
     assert_file_exists "domain suite: binary installed" "${_sm_bin}"
@@ -55,7 +55,7 @@ run_test_domain() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" status 2>"${_errf}"
+        bash "${SCRIPT}" status 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -69,7 +69,7 @@ run_test_domain() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" install --project-dir "${_proj}" 2>"${_errf}"
+        bash "${SCRIPT}" install --project-dir "${_proj}" 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -80,7 +80,7 @@ run_test_domain() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" reinstall --no-run --project-dir "${_proj}" 2>"${_errf}"
+        bash "${SCRIPT}" reinstall --no-run --project-dir "${_proj}" 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -94,7 +94,7 @@ run_test_domain() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" --project-dir "${_proj}" --no-run 2>"${_errf}"
+        bash "${SCRIPT}" --project-dir "${_proj}" --no-run 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -115,7 +115,7 @@ run_test_domain() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" --project-dir "${_proj}" --no-run 2>"${_errf}"
+        bash "${SCRIPT}" --project-dir "${_proj}" --no-run 2>"${_errf}"
     )
     _ec=$?
     assert_eq "domain re-run preserve exit 0" 0 "$_ec"
@@ -127,7 +127,7 @@ run_test_domain() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" --json --project-dir "${_proj}" --no-run 2>"${_errf}"
+        bash "${SCRIPT}" --json --project-dir "${_proj}" --no-run 2>"${_errf}"
     )
     _ec=$?
     assert_eq "domain --json --no-run exit 0" 0 "$_ec"
@@ -141,7 +141,7 @@ run_test_domain() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" --reset --project-dir "${_proj}" --no-run 2>"${_errf}"
+        bash "${SCRIPT}" --reset --project-dir "${_proj}" --no-run 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)

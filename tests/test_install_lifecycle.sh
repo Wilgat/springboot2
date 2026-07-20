@@ -34,7 +34,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" NO_RUN=1 \
-        sh "${SCRIPT}" </dev/null 2>"${_errf}"
+        bash "${SCRIPT}" </dev/null 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -66,7 +66,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" install --project-dir "${_proj}" 2>"${_errf}"
+        bash "${SCRIPT}" install --project-dir "${_proj}" 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -79,7 +79,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" --json uninstall --project-dir "${_proj}" 2>"${_errf}"
+        bash "${SCRIPT}" --json uninstall --project-dir "${_proj}" 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -92,7 +92,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" \
         PATH="${CI_STUB_BIN}:${PATH}" \
-        sh "${SCRIPT}" --json --force uninstall --project-dir "${_proj}" 2>"${_errf}"
+        bash "${SCRIPT}" --json --force uninstall --project-dir "${_proj}" 2>"${_errf}"
     )
     _ec=$?
     assert_eq "payload uninstall --force exit 0" 0 "$_ec"
@@ -103,7 +103,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_USER_BIN}:${PATH}" \
-        sh "${_sm_bin}" --json self-uninstall 2>"${_errf}"
+        bash "${_sm_bin}" --json self-uninstall 2>"${_errf}"
     )
     _ec=$?
     assert_file_exists "binary remains after self-uninstall without force" "${_sm_bin}"
@@ -112,7 +112,7 @@ run_test_install_lifecycle() {
     # --- about shows installed ---
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
-        sh "${SCRIPT}" --json about 2>/dev/null
+        bash "${SCRIPT}" --json about 2>/dev/null
     )
     _ec=$?
     assert_eq "about after install exit 0" 0 "$_ec"
@@ -122,7 +122,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_USER_BIN}:${PATH}" \
-        sh "${_sm_bin}" --json version-check 2>"${_errf}"
+        bash "${_sm_bin}" --json version-check 2>"${_errf}"
     )
     _ec=$?
     assert_eq "version-check --json exit 0" 0 "$_ec"
@@ -133,7 +133,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_USER_BIN}:${PATH}" \
-        sh "${_sm_bin}" --json self-update 2>"${_errf}"
+        bash "${_sm_bin}" --json self-update 2>"${_errf}"
     )
     _ec=$?
     assert_eq "self-update already-latest exit 0" 0 "$_ec"
@@ -143,7 +143,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_USER_BIN}:${PATH}" \
-        sh "${_sm_bin}" --json self-upgrade 2>"${_errf}"
+        bash "${_sm_bin}" --json self-upgrade 2>"${_errf}"
     )
     _ec=$?
     assert_eq "self-upgrade alias exit 0" 0 "$_ec"
@@ -152,7 +152,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_USER_BIN}:${CI_STUB_BIN}:${PATH}" \
-        sh "${_sm_bin}" --force self-update 2>"${_errf}"
+        bash "${_sm_bin}" --force self-update 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -166,7 +166,7 @@ run_test_install_lifecycle() {
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         JSON=1 QUIET=1 PATH="${CI_STUB_BIN}:${PATH}" NO_RUN=1 \
         CHECKSUM="0000000000000000000000000000000000000000000000000000000000000000" \
-        sh "${SCRIPT}" </dev/null 2>"${_errf}"
+        bash "${SCRIPT}" </dev/null 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -178,7 +178,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         JSON=1 QUIET=1 CHECKSUM="${_good}" PATH="${CI_STUB_BIN}:${PATH}" NO_RUN=1 \
-        sh "${SCRIPT}" </dev/null 2>"${_errf}"
+        bash "${SCRIPT}" </dev/null 2>"${_errf}"
     )
     _ec=$?
     assert_eq "CHECKSUM match install exit 0" 0 "$_ec"
@@ -192,7 +192,7 @@ run_test_install_lifecycle() {
         _out=$(
             HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
             PATH="${CI_USER_BIN}:${PATH}" \
-            sh "${_sm_bin}" --json self-update 2>"${_errf}"
+            bash "${_sm_bin}" --json self-update 2>"${_errf}"
         )
         _ec=$?
         _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -211,7 +211,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_USER_BIN}:${PATH}" \
-        sh "${_sm_bin}" --json --force self-uninstall 2>"${_errf}"
+        bash "${_sm_bin}" --json --force self-uninstall 2>"${_errf}"
     )
     _ec=$?
     assert_eq "self-uninstall --force exit 0" 0 "$_ec"
@@ -225,7 +225,7 @@ run_test_install_lifecycle() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" \
         SCRIPT_URL="http://127.0.0.1:1/nope" PATH="${CI_STUB_BIN}:${PATH}" NO_RUN=1 \
-        sh "${SCRIPT}" </dev/null 2>"${_errf}"
+        bash "${SCRIPT}" </dev/null 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)

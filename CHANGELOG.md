@@ -12,6 +12,16 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) 
 
 ---
 
+## [2.3.1] - 2026-07-20
+
+### Fixed
+- **Silent `curl | bash` / empty argv (INC-20260720-001):** under `set -u`, sourcing user `.bashrc` (or `sdkman-init.sh`) could abort the process while stderr was discarded — **zero messages**, non-zero exit. Fixed via `util_source_external_safe` (nounset off around third-party sources) and safer SDKMAN/Java/Maven setup with loud `out_die` on payload failures.
+
+### Notes
+- Product **VERSION** `2.3.1`.
+
+---
+
 ## [2.3.0] - 2026-07-20
 
 ### Added
@@ -131,7 +141,8 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) 
 
 **GitHub**: https://github.com/Wilgat/springboot2
 
-[Unreleased]: https://github.com/Wilgat/springboot2/compare/2.3.0...HEAD
+[Unreleased]: https://github.com/Wilgat/springboot2/compare/2.3.1...HEAD
+[2.3.1]: https://github.com/Wilgat/springboot2/compare/2.3.0...2.3.1
 [2.3.0]: https://github.com/Wilgat/springboot2/compare/2.2.0...2.3.0
 [2.2.0]: https://github.com/Wilgat/springboot2/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/Wilgat/springboot2/compare/2.0.1...2.1.0

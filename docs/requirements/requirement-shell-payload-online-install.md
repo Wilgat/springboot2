@@ -18,7 +18,7 @@ This requirement is the **project Single Source of Truth** for springboot2 as a 
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.0` |
+| **VERSION** | `2.3.1` |
 | **Product class** | **Type O-P — payload online installer** |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | composed GitHub raw default |

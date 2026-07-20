@@ -18,9 +18,9 @@ run_test_cli() {
     require_cmd grep
 
     # --- syntax ---
-    sh -n "${SCRIPT}"
+    bash -n "${SCRIPT}"
     _syn=$?
-    assert_eq "sh -n ${APP_NAME} (syntax)" 0 "$_syn"
+    assert_eq "bash -n ${APP_NAME} (syntax)" 0 "$_syn"
 
     # --- companion digest (Shape A) ---
     if [ -f "${REPO_ROOT}/${APP_NAME}.sha256" ]; then
@@ -32,14 +32,14 @@ run_test_cli() {
     fi
 
     # --- version (human) ---
-    _out=$(sh "${SCRIPT}" version 2>/dev/null)
+    _out=$(bash "${SCRIPT}" version 2>/dev/null)
     _ec=$?
     assert_eq "version exit 0" 0 "$_ec"
     assert_contains "version human mentions version" "$_out" "${PRODUCT_VERSION}"
     assert_contains "version human mentions app" "$_out" "${APP_NAME}"
 
     # --- version (json) ---
-    _out=$(sh "${SCRIPT}" --json version 2>/dev/null)
+    _out=$(bash "${SCRIPT}" --json version 2>/dev/null)
     _ec=$?
     assert_eq "version --json exit 0" 0 "$_ec"
     assert_contains "version --json type" "$_out" '"type":"version"'
@@ -47,7 +47,7 @@ run_test_cli() {
     assert_contains "version --json version field" "$_out" "\"version\":\"${PRODUCT_VERSION}\""
 
     # --- help (human): Type 0 + domain surface ---
-    _out=$(sh "${SCRIPT}" help 2>/dev/null)
+    _out=$(bash "${SCRIPT}" help 2>/dev/null)
     _ec=$?
     assert_eq "help exit 0" 0 "$_ec"
     assert_contains "help lists version-check" "$_out" "version-check"
@@ -65,14 +65,14 @@ run_test_cli() {
     assert_not_contains "help must not list CHECKSUM" "$_out" "CHECKSUM"
 
     # --- help (json): short object, not full prose ---
-    _out=$(sh "${SCRIPT}" --json help 2>/dev/null)
+    _out=$(bash "${SCRIPT}" --json help 2>/dev/null)
     _ec=$?
     assert_eq "help --json exit 0" 0 "$_ec"
     assert_contains "help --json type success" "$_out" '"type":"out_success"'
     assert_contains "help --json mentions human mode" "$_out" "Help text"
 
     # --- about (json): no CHECKSUM field; storage resolve fields ---
-    _out=$(sh "${SCRIPT}" --json about 2>/dev/null)
+    _out=$(bash "${SCRIPT}" --json about 2>/dev/null)
     _ec=$?
     assert_eq "about --json exit 0" 0 "$_ec"
     assert_contains "about --json type" "$_out" '"type":"about"'
@@ -86,7 +86,7 @@ run_test_cli() {
     ci_isolated_env
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" \
-        sh "${SCRIPT}" --json about 2>/dev/null
+        bash "${SCRIPT}" --json about 2>/dev/null
     )
     _ec=$?
     assert_eq "about --json under isolated HOME exit 0" 0 "$_ec"
@@ -103,7 +103,7 @@ run_test_cli() {
     _custom="${CI_HOME}/custom-storage-root"
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" STORAGE_DIR="${_custom}" \
-        sh "${SCRIPT}" --json about 2>/dev/null
+        bash "${SCRIPT}" --json about 2>/dev/null
     )
     _ec=$?
     assert_eq "about --json with STORAGE_DIR override exit 0" 0 "$_ec"
@@ -125,19 +125,19 @@ run_test_cli() {
     ci_cleanup_env
 
     # --- unknown command (out_die → exit 1; JSON type "out_error") ---
-    _err=$(sh "${SCRIPT}" no-such-command 2>&1 >/dev/null)
+    _err=$(bash "${SCRIPT}" no-such-command 2>&1 >/dev/null)
     _ec=$?
     assert_eq "unknown command exit 1" 1 "$_ec"
     assert_contains "unknown command error text" "$_err" "Invalid command"
 
     # JSON errors go to stdout via out_json; capture both streams
-    _err=$(sh "${SCRIPT}" --json no-such-command 2>&1)
+    _err=$(bash "${SCRIPT}" --json no-such-command 2>&1)
     _ec=$?
     assert_eq "unknown command --json exit 1" 1 "$_ec"
     assert_contains "unknown command --json type error" "$_err" '"type":"out_error"'
 
     # --- quiet: version should not print info banners ---
-    _out=$(sh "${SCRIPT}" --quiet version 2>/dev/null)
+    _out=$(bash "${SCRIPT}" --quiet version 2>/dev/null)
     _ec=$?
     assert_eq "version --quiet exit 0" 0 "$_ec"
     if [ -z "$_out" ]; then
@@ -152,7 +152,7 @@ run_test_cli() {
     fi
 
     # --- HOME unset under set -u (INC-20260713-001 pattern) ---
-    _out=$(env -u HOME sh "${SCRIPT}" version 2>/dev/null)
+    _out=$(env -u HOME bash "${SCRIPT}" version 2>/dev/null)
     _ec=$?
     assert_eq "env -u HOME version exit 0" 0 "$_ec"
     assert_contains "env -u HOME version still reports version" "$_out" "${PRODUCT_VERSION}"
@@ -164,7 +164,7 @@ run_test_cli() {
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" \
         SCRIPT_URL="http://127.0.0.1:1/${APP_NAME}-unreachable" \
-        sh "${SCRIPT}" </dev/null 2>"${_errf}"
+        bash "${SCRIPT}" </dev/null 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
@@ -174,6 +174,50 @@ run_test_cli() {
         t_fail "zero-arg failed install expected non-zero exit, got 0 (stdout='$(_trunc "$_out")' err='$(_trunc "$_err")')"
     fi
     assert_file_missing "zero-arg failed install left no binary" "${CI_USER_BIN}/${APP_NAME}"
+    if [ -n "${_out}${_err}" ]; then
+        t_pass "zero-arg failed install is not silent (has output)"
+    else
+        t_fail "zero-arg failed install silent (no stdout/stderr) — INC-20260720-001"
+    fi
+    ci_cleanup_env
+
+    # --- INC-20260720-001: bashrc that sources sdkman-init under set -u must not silent-abort ---
+    ci_isolated_env
+    mkdir -p "${CI_USER_BIN}" "${CI_HOME}/.sdkman/bin"
+    cp "${SCRIPT}" "${CI_USER_BIN}/${APP_NAME}"
+    chmod +x "${CI_USER_BIN}/${APP_NAME}"
+    # Minimal sdkman-init that expands unbound vars when set -u is on (real SDKMAN does this)
+    cat > "${CI_HOME}/.sdkman/bin/sdkman-init.sh" <<'EOF'
+#!/usr/bin/env bash
+if [ -z "$SDKMAN_CANDIDATES_API" ]; then
+export SDKMAN_CANDIDATES_API="https://api.sdkman.io/2"
+fi
+sdk() { return 0; }
+EOF
+    cat > "${CI_HOME}/.bashrc" <<EOF
+export SDKMAN_DIR="\${HOME}/.sdkman"
+[ -s "\${HOME}/.sdkman/bin/sdkman-init.sh" ] && . "\${HOME}/.sdkman/bin/sdkman-init.sh"
+EOF
+    ci_stub_domain_toolchain
+    _errf="${CI_HOME}/sdkman-bashrc-err.txt"
+    _out=$(
+        HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" PATH="${CI_STUB_BIN}:${CI_USER_BIN}:${PATH}" \
+        NO_RUN=1 \
+        bash "${SCRIPT}" --no-run </dev/null 2>"${_errf}"
+    )
+    _ec=$?
+    _err=$(cat "${_errf}" 2>/dev/null || true)
+    if [ -n "${_out}${_err}" ]; then
+        t_pass "bashrc+sdkman under set -u is not silent"
+    else
+        t_fail "bashrc+sdkman silent abort (0 bytes out) — set -u source bug"
+    fi
+    # Must not die before any product messaging solely from sourcing bashrc
+    if printf '%s' "${_out}${_err}" | grep -qE 'SDKMAN|Payload|setup|Spring|INFO|OK|ERROR|already'; then
+        t_pass "bashrc+sdkman path reaches product messages"
+    else
+        t_fail "bashrc+sdkman no product messages: '$(_trunc "${_out}${_err}")'"
+    fi
     ci_cleanup_env
 
     # --- self-uninstall fail-closed (product law / INC-20260713-002) ---
@@ -186,7 +230,7 @@ run_test_cli() {
     _errf="${CI_HOME}/un-err.txt"
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" \
-        sh "${SCRIPT}" --json self-uninstall 2>"${_errf}"
+        bash "${SCRIPT}" --json self-uninstall 2>"${_errf}"
     )
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)

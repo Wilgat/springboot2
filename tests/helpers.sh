@@ -186,7 +186,7 @@ EOF
 }
 
 ci_run() {
-    sh "${SCRIPT}" "$@"
+    bash "${SCRIPT}" "$@"
 }
 
 require_cmd() {

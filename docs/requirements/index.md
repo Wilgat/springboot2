@@ -1,7 +1,7 @@
 # Requirements index
 
 **Product:** springboot2 — bash (`#!/bin/bash`) Type 0 self-install / self-maintenance CLI plus Spring Boot 2.7.18 domain  
-**Identity SSOT:** ship unit `./springboot2` Project Constants — `APP_NAME="springboot2"`, `VERSION="2.3.0"`, `REPO_USER="Wilgat"`, `REPO_NAME="springboot2"`, `SCRIPT_URL` composed from those. Requirements **must not** invent a different product name, channel, or version.  
+**Identity SSOT:** ship unit `./springboot2` Project Constants — `APP_NAME="springboot2"`, `VERSION="2.3.1"`, `REPO_USER="Wilgat"`, `REPO_NAME="springboot2"`, `SCRIPT_URL` composed from those. Requirements **must not** invent a different product name, channel, or version.  
 **Workspace state:** Specialized product law — identity SSOT retargeted; Implementation Notes use **live** `./springboot2` helpers; false “Implemented” seed claims demoted to **Gap/Partial** where code lacks them; domain law registered (`requirement-springboot2-domain`).  
 **Live Implementation honesty:** Product naming SSOT = A prefixes (`out_*`, `inst_*`, `app_main`) on live ship unit (§3.1 option 1). Empty argv when installed = domain **run**. Automatic checksum Shape A when companion present. JSON success/error types = `out_success` / `out_error`.
 **Sufficiency note:** Domain + storage + integrity law registered; help↔dispatcher / force / hybrid empty-argv / Shape A+B checksum / tests green; Implementation Notes re-synced 2026-07-15. Storage: resolve+mkdir fail-closed, `EFFECTIVE_STORAGE_DIR` + `TMPDIR` in main, about fields. Residual: optional downgrade JSON code wording; JSON error on stdout vs stderr.  

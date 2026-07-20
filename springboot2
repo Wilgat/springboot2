@@ -2,6 +2,24 @@
 # =============================================================================
 # springboot2 – Spring Boot 2.7.18 setup (bootstrapped from selfmanaged Type 0)
 # =============================================================================
+# Requires bash (SDKMAN + defensive features). Re-exec if invoked as sh/dash.
+if [ -z "${BASH_VERSION:-}" ]; then
+    if command -v bash >/dev/null 2>&1; then
+        case "${0##*/}" in
+            sh|dash|ash|busybox)
+                # stdin pipe under non-bash: cannot reliably re-exec; fail loud
+                printf '%s\n' "springboot2 requires bash. Use: curl -fsSL <url> | bash" >&2
+                exit 1
+                ;;
+            *)
+                exec bash "$0" "$@"
+                ;;
+        esac
+    else
+        printf '%s\n' "springboot2 requires bash, but bash was not found on PATH." >&2
+        exit 1
+    fi
+fi
 #
 # FULL FEATURED SELF-MANAGED PROGRAM (CIAO / CIAO-Lite Compliant)
 #
@@ -44,8 +62,8 @@ APP_NAME="springboot2"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=Spring Boot 2.7.18 payload online installer (CLI self-* + payload install/uninstall + run).}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="2.3.0"
-: "${VERSION:=2.3.0}"
+VERSION="2.3.1"
+: "${VERSION:=2.3.1}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -2199,10 +2217,33 @@ prompt_yes_no() {
 
 # =============================================================================
 
+# util_source_external_safe() — source a file without set -u aborting the product
+# =============================================================================
+# CRITICAL (INC-20260720-001 / silent curl|bash):
+# Under `set -u`, sourcing user .bashrc or sdkman-init.sh expands unset SDKMAN_*
+# vars and aborts the whole process. When callers use `source f 2>/dev/null`,
+# that abort is **silent** (stderr discarded) — operators see no message and
+# exit non-zero with nothing installed / nothing continued.
+# Always disable nounset around untrusted/third-party sources.
+# =============================================================================
+util_source_external_safe() {
+    local _file="${1:-}"
+    [ -n "${_file}" ] || return 1
+    [ -r "${_file}" ] || return 1
+    # Temporarily allow unset vars in third-party shell snippets
+    set +u
+    # shellcheck disable=SC1090
+    . "${_file}"
+    local _rc=$?
+    set -u
+    return ${_rc}
+}
+
 util_source_user_shell_config() {
     # Defensive safe defaults - repeated on purpose
     : "${QUIET:=0}"
     : "${JSON:=0}"
+    : "${HOME:=/root}"
 
     # Never source in machine modes - keeps output clean and predictable
     if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
@@ -2221,23 +2262,18 @@ util_source_user_shell_config() {
         "${HOME}/.zshrc"; do
 
         if [ -f "${config_file}" ] && [ -r "${config_file}" ]; then
-            # Source safely - never let errors stop the script
-            if source "${config_file}" 2>/dev/null; then
+            # Source with nounset OFF — never silent-abort under set -u
+            if util_source_external_safe "${config_file}" 2>/dev/null; then
                 sourced=1
-                # Do not print anything by default (keeps output clean)
-                # You can uncomment the next line during debugging:
-                # out_info "Sourced user shell config: ${config_file}"
                 break   # Only source the first valid file to avoid conflicts
             fi
         fi
     done
 
     # Special handling for SDKMAN - critical for Java/Maven availability
-    # Many users rely on SDKMAN being initialized in their normal shell
     local sdk_init="${HOME}/.sdkman/bin/sdkman-init.sh"
     if [ -s "${sdk_init}" ]; then
-        # Source silently - failure is acceptable
-        source "${sdk_init}" 2>/dev/null || true
+        util_source_external_safe "${sdk_init}" 2>/dev/null || true
     fi
 
     return 0
@@ -2389,29 +2425,59 @@ check_alpine_requirements() {
 # =============================================================================
 
 setup_sdkman() {
+    : "${HOME:=/root}"
+    : "${JSON:=0}"
     check_alpine_requirements
+
+    # If SDKMAN dir exists, always init safely (set +u) before trusting `sdk` on PATH
+    local init="${HOME}/.sdkman/bin/sdkman-init.sh"
+    if [ -s "${init}" ]; then
+        util_source_external_safe "${init}" 2>/dev/null || true
+    fi
+
     if [ -d "${HOME}/.sdkman" ] && command -v sdk >/dev/null 2>&1; then
         out_info "SDKMAN already installed."
         return 0
     fi
 
     out_info "Installing SDKMAN..."
-    curl -s "https://get.sdkman.io" | bash || out_die "SDKMAN install failed"
+    # Installer itself is third-party; run with nounset off so its scripts do not
+    # abort our process under set -u (silent or cryptic failures).
+    set +u
+    curl -fsSL "https://get.sdkman.io" | bash
+    local _sdk_install_rc=$?
+    set -u
+    if [ "${_sdk_install_rc}" -ne 0 ]; then
+        out_die "SDKMAN install failed (curl|bash exit ${_sdk_install_rc})"
+    fi
 
-    local init="${HOME}/.sdkman/bin/sdkman-init.sh"
-    if [ -s "$init" ]; then
-        . "$init"
+    if [ -s "${init}" ]; then
+        if ! util_source_external_safe "${init}" 2>/dev/null; then
+            out_warn "SDKMAN init script returned non-zero; continuing to locate sdk..."
+        fi
     fi
 
     if ! command -v sdk >/dev/null 2>&1; then
-        out_warn "SDKMAN installed but 'sdk' command is not yet available."
+        # Common after fresh install: sdk only on PATH after init in a new shell
+        if [ -x "${HOME}/.sdkman/bin/sdk" ]; then
+            # shellcheck disable=SC1090
+            set +u
+            # Prefer exporting candidates dir for direct binary use
+            export SDKMAN_DIR="${HOME}/.sdkman"
+            PATH="${HOME}/.sdkman/bin:${HOME}/.sdkman/candidates/java/current/bin:${HOME}/.sdkman/candidates/maven/current/bin:${PATH}"
+            export PATH
+            set -u
+        fi
+    fi
+
+    if ! command -v sdk >/dev/null 2>&1; then
+        out_error "SDKMAN installed but 'sdk' command is not available in this shell."
         out_plain ""
         out_plain "Please run one of these commands, then retry:"
         out_plain "    . \"${HOME}/.sdkman/bin/sdkman-init.sh\""
         out_plain "    or simply open a new terminal"
         out_plain ""
-
-        exit 1
+        out_die "SDKMAN not on PATH after install (payload incomplete)"
     fi
 
     out_info "SDKMAN is ready."
@@ -2424,11 +2490,27 @@ setup_java() {
     # Defensive defaults - never assume globals are set
     : "${JAVA_ID:=8.0.472-amzn}"
     : "${JAVA_NAME:=Java 1.8 (Eclipse Amazon Corretto)}"
+    : "${HOME:=/root}"
 
     out_info "Setting up ${JAVA_NAME}..."
-    sdk install java "${JAVA_ID}" </dev/null || out_die "Java install failed"
-    sdk default java "${JAVA_ID}" >/dev/null 2>&1
+    # sdk is third-party; run without nounset so candidate scripts never silent-abort us
+    set +u
+    sdk install java "${JAVA_ID}" </dev/null
+    local _jrc=$?
+    sdk default java "${JAVA_ID}" >/dev/null 2>&1 || true
     sdk use java "${JAVA_ID}" >/dev/null 2>&1 || true
+    # Ensure candidates on PATH even if sdk use did not export in this shell
+    if [ -d "${HOME}/.sdkman/candidates/java/current/bin" ]; then
+        PATH="${HOME}/.sdkman/candidates/java/current/bin:${PATH}"
+        export PATH
+    fi
+    set -u
+    if [ "${_jrc}" -ne 0 ]; then
+        out_die "Java install failed (sdk install exit ${_jrc})"
+    fi
+    if ! command -v java >/dev/null 2>&1; then
+        out_die "Java not on PATH after SDKMAN install"
+    fi
     java -version 2>&1 | head -n 1 || out_die "Java not working"
 }
 
@@ -2438,12 +2520,26 @@ setup_maven() {
 # --- Safe Variable Defaults ----
     # Defensive defaults - never assume globals are set
     : "${MAVEN_VER:=3.9.14}"
+    : "${HOME:=/root}"
 
     out_info "Setting up Maven ${MAVEN_VER}..."
-    sdk install maven "${MAVEN_VER}" </dev/null || out_die "Maven install failed"
-    sdk default maven "${MAVEN_VER}" >/dev/null 2>&1
+    set +u
+    sdk install maven "${MAVEN_VER}" </dev/null
+    local _mrc=$?
+    sdk default maven "${MAVEN_VER}" >/dev/null 2>&1 || true
     sdk use maven "${MAVEN_VER}" >/dev/null 2>&1 || true
-    mvn --version | head -n 3 || out_die "Maven not working"
+    if [ -d "${HOME}/.sdkman/candidates/maven/current/bin" ]; then
+        PATH="${HOME}/.sdkman/candidates/maven/current/bin:${PATH}"
+        export PATH
+    fi
+    set -u
+    if [ "${_mrc}" -ne 0 ]; then
+        out_die "Maven install failed (sdk install exit ${_mrc})"
+    fi
+    if ! command -v mvn >/dev/null 2>&1; then
+        out_die "Maven not on PATH after SDKMAN install"
+    fi
+    mvn --version 2>/dev/null | head -n 3 || out_die "Maven not working"
 }
 
 # =============================================================================
@@ -2791,7 +2887,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=springboot2}"
-    : "${VERSION:=2.3.0}"
+    : "${VERSION:=2.3.1}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -3175,11 +3271,22 @@ app_main() {
     esac
 
     # === Payload pipeline (run / reinstall / empty-argv default) ===
-    check_alpine_requirements || exit 1
-    setup_sdkman || exit 1
-    setup_java || exit 1
-    setup_maven || exit 1
-    setup_springboot_project || exit 1
+    # Always fail loud via out_* — never silent exit after ship-unit install.
+    if ! check_alpine_requirements; then
+        out_die "Alpine/bash prerequisites check failed"
+    fi
+    if ! setup_sdkman; then
+        out_die "Payload step failed: SDKMAN setup"
+    fi
+    if ! setup_java; then
+        out_die "Payload step failed: Java setup"
+    fi
+    if ! setup_maven; then
+        out_die "Payload step failed: Maven setup"
+    fi
+    if ! setup_springboot_project; then
+        out_die "Payload step failed: Spring Boot project setup"
+    fi
 
     if [ "${NO_RUN}" -eq 1 ]; then
         if [ "${JSON}" -eq 1 ]; then
@@ -3195,6 +3302,7 @@ app_main() {
         exit 0
     fi
 
+    out_info "Starting Spring Boot application (payload run)..."
     run_springboot_project
 }
 

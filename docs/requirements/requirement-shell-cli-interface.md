@@ -19,7 +19,7 @@ It defines a **Type 0–centric self-managed shell CLI** (install / update / uni
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.0` |
+| **VERSION** | `2.3.1` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -98,7 +98,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | **Primary executable** | Repo root `./springboot2` (bash `#!/bin/bash`, single-file for `curl \| sh`) |
 | **Dispatcher** | `app_main` (always invoked at end of script: `app_main "$@"` — no `${0##*/}` / APP_NAME basename gate; required for `curl \| sh`) |
 | **Output SSOT** | `out_text` + wrappers (`out_info`, `out_success`, `out_warn`, `out_error`, `out_die`, `out_plain`, `out_json`, …) |
-| **Version SSOT** | `VERSION` default `2.3.0` (script header / config block: `VERSION="2.3.0"`) |
+| **Version SSOT** | `VERSION` default `2.3.1` (script header / config block: `VERSION="2.3.1"`) |
 | **Install paths** | Global: `GLOBAL_BIN` default `/usr/local/bin`; User: `USER_BIN` default `${HOME}/.local/bin` |
 | **Remote channel env (help surface)** | `REPO_USER` / `REPO_NAME` (defaults `Wilgat` / `springboot2`); `SCRIPT_URL` composed default `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}` (literal product default: `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2`; override via env). **`help` / `about` MUST list these operator channel vars as designed — MUST NOT list `CHECKSUM`** (install-path runtime pin only; see `requirement-shell-automatic-checksum.md`) |
 | **Type 1 / Type 2 commands** | **None** on current surface — this tool is CLI lifecycle only |
