@@ -1,6 +1,6 @@
 # springboot2
 
-[![Version](https://img.shields.io/badge/Version-2.2.0-blue?style=flat-square)](https://github.com/cloudgen/grokrec)
+[![Version](https://img.shields.io/badge/Version-2.3.0-blue?style=flat-square)](https://github.com/cloudgen/grokrec)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Made with CIAO](https://img.shields.io/badge/Made%20with%20❤️-CIAO-00AEEF?style=flat-square)](https://github.com/cloudgen/ciao)
@@ -20,16 +20,17 @@ Official Recommendation for [grok](https://grok.com/c/f49cec00-352f-4197-9932-32
 
 ## ✨ Features
 
-- One-liner install (`curl | bash`)
-- Supports both **user** (`~/.local/bin`) and **system** (`/usr/local/bin`) installation
+- **Payload online installer (Type O-P):** one-liner installs the CLI **and** the Spring Boot environment
+- One-liner install (`curl | bash`) — combined ship-unit + payload ensure
+- Supports both **user** (`~/.local/bin`) and **system** (`/usr/local/bin`) CLI placement
 - Automatically installs SDKMAN! + pinned Java 8 (Amazon Corretto) + Maven 3.9.14
 - Creates or re-uses a minimal Spring Boot 2.7.18 project
 - **Project preservation by default** — repeated runs keep your changes (`--reset` to start fresh)
 - Full support for existing legacy projects via `--project-dir`
-- New commands: `status`, `about` (with rich diagnostics)
-- `--no-run` flag for CI / Docker environments
-- `--json` + `--quiet` support for scripting and diagnostics
-- Self-installing, self-updating, and version checking
+- **Payload commands:** `install` / `uninstall` (environment/project only)
+- **CLI self-care:** `self-update` / `self-upgrade` / `self-uninstall` / `version-check`
+- Diagnostics: `status`, `about` (JSON-capable)
+- `--no-run` for CI / Docker; `--json` + `--quiet` for scripting
 - Multi-shell PATH setup (bash, zsh, fish)
 - Extremely defensive coding style with repeated safe defaults
 
@@ -59,23 +60,29 @@ The application will be available at **http://localhost:8080**
 ## 📖 Usage
 
 ```bash
-springboot2                          # Setup + build + run (preserves project by default)
+springboot2                          # Combined ensure + build + run (preserves project by default)
+springboot2 install                  # Payload only: SDKMAN/Java/Maven/project (no app run)
+springboot2 uninstall --force        # Payload only: remove managed project dir (not the CLI)
+springboot2 run                      # Payload ensure + build + run
 springboot2 --reset                  # Full reset: delete and regenerate project
 springboot2 --project-dir <path>     # Work with an existing legacy project
 springboot2 --no-run                 # Setup only (no build/run) — useful for CI/Docker
-springboot2 status                   # Show if the app is running
+springboot2 status                   # Diagnostics (alias of about)
 springboot2 about                    # Full diagnostics (Java, Maven, project, etc.)
 springboot2 about --json             # Machine-readable diagnostics
 springboot2 version
-springboot2 version-check
-springboot2 self-update
+springboot2 version-check            # Compare CLI with remote channel
+springboot2 self-update              # Upgrade the CLI ship unit (alias: self-upgrade)
+springboot2 self-uninstall --force   # Remove the CLI binary only
 springboot2 help
 ```
 
 ### Key Behaviors
 
+- **Command layers:** `install` / `uninstall` = **payload** (environment/project). `self-update` / `self-uninstall` = **this CLI script only**.
+- **One-liner / empty argv:** places the CLI if needed, then ensures the Spring Boot environment (not binary-only).
 - **Normal run**: Preserves your existing project folder, `pom.xml`, source code, and `application.properties`.
-- **`--reset`**: Completely wipes and regenerates the project (replaces old `--force`).
+- **`--reset`**: Completely wipes and regenerates the project.
 - **`--project-dir`**: Point to any existing Spring Boot 2.7 project.
 - **`--no-run`**: Only sets up the environment and project — does not build or start the app.
 
@@ -204,7 +211,7 @@ MIT
 ---
 
 **Part of the Wilgat defensive tool family.**  
-*Last updated: 2026-07-15 · version **2.2.0***
+*Last updated: 2026-07-20 · version **2.3.0***
 
 ---
 

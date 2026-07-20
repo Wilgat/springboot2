@@ -1,10 +1,10 @@
 # =============================================================================
 # tests/test_domain.sh — Spring Boot domain surface (offline-friendly)
 # =============================================================================
-# Covers: help domain flags, help↔dispatcher Gaps (status/reinstall/--reset),
-# --project-dir + --no-run project preserve, hybrid empty argv domain setup
+# Covers: help domain flags, status/reinstall/--reset, install payload,
+# --project-dir + --no-run project preserve, Type O-P empty argv + payload
 # with stub SDKMAN (no public network, no real Java install).
-# Law: requirement-springboot2-domain.md + zero-arg hybrid supersession.
+# Law: requirement-springboot2-domain.md + requirement-shell-payload-online-install.md
 # =============================================================================
 
 # shellcheck source=helpers.sh
@@ -24,8 +24,10 @@ run_test_domain() {
     assert_contains "domain help: --reset advertised" "$_out" "--reset"
     assert_contains "domain help: status advertised" "$_out" "status"
     assert_contains "domain help: reinstall advertised" "$_out" "reinstall"
+    assert_contains "domain help: install advertised" "$_out" "install"
+    assert_contains "domain help: uninstall advertised" "$_out" "uninstall"
 
-    # --- install then domain under isolated HOME (status/reinstall/--reset here) ---
+    # --- ship install + payload under isolated HOME ---
     require_cmd curl
     require_cmd python3
     require_cmd sha256sum
@@ -40,12 +42,14 @@ run_test_domain() {
     _errf="${CI_HOME}/dom-err.txt"
     _proj="${CI_HOME}/my-demo-project"
 
-    # install via empty argv
-    HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
-        sh "${SCRIPT}" </dev/null >/dev/null 2>"${_errf}" || true
-    assert_file_exists "domain suite: binary installed" "${_sm_bin}"
-
     ci_stub_domain_toolchain
+    # Type O-P: empty argv with NO_RUN continues to payload after ship place
+    HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
+        PATH="${CI_STUB_BIN}:${PATH}" NO_RUN=1 \
+        sh "${SCRIPT}" </dev/null >/dev/null 2>"${_errf}"
+    _ec=$?
+    assert_eq "domain suite: empty-argv combined ensure exit 0" 0 "$_ec"
+    assert_file_exists "domain suite: binary installed" "${_sm_bin}"
 
     # help↔dispatcher: status (about alias) under isolation
     _out=$(
@@ -60,6 +64,17 @@ run_test_domain() {
     else
         t_fail "status advertised in help but dispatcher rejects it (help↔dispatcher Gap): '$(_trunc "$_err$_out")'"
     fi
+
+    # explicit payload install command
+    _out=$(
+        HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
+        PATH="${CI_STUB_BIN}:${PATH}" \
+        sh "${SCRIPT}" install --project-dir "${_proj}" 2>"${_errf}"
+    )
+    _ec=$?
+    _err=$(cat "${_errf}" 2>/dev/null || true)
+    assert_eq "payload install command exit 0" 0 "$_ec"
+    assert_file_exists "payload install pom" "${_proj}/pom.xml"
 
     # reinstall: force CLI reinstall + domain; use --no-run to stay offline with stubs
     _out=$(

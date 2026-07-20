@@ -9,7 +9,9 @@ This requirement is the **project Single Source of Truth** for the **Spring Boot
 It owns product ops so agents do not treat shell lifecycle files alone as full-product law (see glossary: domain-requirements, requirement-sufficient-check).
 
 **Scope:** Domain pins, helpers, default run path, project preserve/force, domain flags, help↔dispatcher alignment for domain surface.  
-**Out of scope (cited, not re-owned):** Binary install / self-update / uninstall (`requirement-shell-self-management.md`); empty-argv install-ensure when not installed (`requirement-shell-cli-zero-arguments.md`); full Type 0 command catalog (`requirement-shell-cli-interface.md`); automatic companion checksum (`requirement-shell-automatic-checksum.md`); output channel SSOT (`requirement-shell-output-requirements.md`).
+**Out of scope (cited, not re-owned):** Binary install / self-update / uninstall detail (`requirement-shell-self-management.md`); empty-argv Type O-P routing when not installed (`requirement-shell-cli-zero-arguments.md` — this domain file owns **payload steps** that empty argv must reach); full Type 0 command catalog (`requirement-shell-cli-interface.md`); automatic companion checksum (`requirement-shell-automatic-checksum.md`); output channel SSOT (`requirement-shell-output-requirements.md`).
+
+**Payload online installer:** springboot2 is Type O-P. Product-class law: `requirement-shell-payload-online-install.md`. Domain helpers below are the **payload content** (what `install` / empty-argv payload layer / `run` ensure). Command names: **`install`/`uninstall` = payload**; **`self-update`/`self-uninstall` = CLI only**.
 
 ---
 
@@ -18,7 +20,7 @@ It owns product ops so agents do not treat shell lifecycle files alone as full-p
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.2.0` |
+| **VERSION** | `2.3.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -74,8 +76,8 @@ Live code keys full project wipe/regenerate on `FORCE_REINSTALL` from `--force` 
 | Surface | Contract |
 |---------|----------|
 | **Default cmd** | `cmd=run` when no Type 0 command token is given |
-| **Empty argv when installed** | Domain run pipeline (§2.2) — **not** Type 0 install no-op; see `requirement-shell-cli-zero-arguments.md` hybrid supersession |
-| **Empty argv when not installed** | Install-ensure first (`inst_maybe_install` / `inst_perform_install`); domain run is not the first-install contract |
+| **Empty argv when installed** | Domain run pipeline (§2.2) + non-interactive ship-unit upgrade policy — **not** Type O-S binary no-op; see `requirement-shell-cli-zero-arguments.md` Type O-P |
+| **Empty argv when not installed** | Type O-P: ship-unit install **then** this domain pipeline — domain **is** part of first-install contract (`requirement-shell-cli-zero-arguments.md`) |
 | `--project-dir <path>` | Set `PROJECT_DIR`; required path argument or fail loud |
 | `--no-run` | Complete env + project setup; skip `run_springboot_project`; success message / JSON with `no_run` |
 | `--force` / force-user / force-root | Privilege and reinstall policy; project regenerate when wired to `FORCE_REINSTALL` |
@@ -118,7 +120,8 @@ Live code keys full project wipe/regenerate on `FORCE_REINSTALL` from `--force` 
 | `--force` → `FORCE_REINSTALL=1` | **Implemented** |
 | Empty argv installed = domain pipeline | **Implemented** (hybrid) |
 | Preserve without force | **Implemented** |
-| `install` subcommand | **Intentional absent** — empty-argv first install only |
+| `install` / `uninstall` (payload) | **Required** — `payload_install` / `payload_uninstall` |
+| Empty argv not-installed continues to domain | **Required (Type O-P)** — ship install then payload (no binary-only exit) |
 | Residual | Real SDKMAN/Java network path not fully mocked beyond suite stubs; production run needs network/toolchain |
 
 ### 2.8 Why This Requirement Exists (Direct CIAO Alignment)
@@ -134,7 +137,7 @@ Live code keys full project wipe/regenerate on `FORCE_REINSTALL` from `--force` 
 ## 3. Design Principles (CIAO / CIAO-Lite)
 
 - Domain is **additive** to Type 0 — never a reason to delete self-management.  
-- Empty argv is a **hybrid**: not installed → install-ensure; installed → domain run.  
+- Empty argv is **Type O-P combined ensure**: not installed → ship unit **then** domain; installed → upgrade policy + domain run.  
 - Help, dispatcher, and this requirement stay synchronized.  
 - Prefer surgical code changes over “cleanup” that rewrites defensive domain helpers.
 
@@ -175,7 +178,7 @@ This requirement is satisfied when:
 
 | Artifact | Role |
 |----------|------|
-| `docs/requirements/requirement-shell-cli-zero-arguments.md` | Hybrid empty argv; install when absent |
+| `docs/requirements/requirement-shell-cli-zero-arguments.md` | Type O-P empty argv; combined ship unit + payload |
 | `docs/requirements/requirement-shell-cli-interface.md` | Type 0 command surface; domain addendum |
 | `docs/requirements/requirement-shell-self-management.md` | Binary lifecycle only |
 | `docs/requirements/requirement-shell-output-requirements.md` | Output SSOT for domain messages |

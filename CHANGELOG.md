@@ -12,6 +12,28 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) 
 
 ---
 
+## [2.3.0] - 2026-07-20
+
+### Added
+- **Type O-P payload online installer** law and behavior: one-liner / empty argv **combined ensure** (CLI ship unit + Spring Boot environment), not binary-only place-and-exit.
+- Payload commands: **`install`** (SDKMAN/Java/Maven/project) and **`uninstall`** (managed project dir only; confirm / `--force`).
+- Ship-unit alias: **`self-upgrade`** → same as **`self-update`**.
+- Product requirement: `docs/requirements/requirement-shell-payload-online-install.md` (registered in `index.md`).
+- Tests expanded for payload layer isolation, combined empty argv, silent bad-channel detection (125 cases).
+
+### Changed
+- Empty argv no longer exits after first-time CLI self-install; continues into payload setup / run.
+- Non-interactive re-run applies ship-unit update policy then payload ensure.
+- Help documents **payload vs ship-unit** command layers.
+- CLI interface / zero-arguments / domain / self-management requirements aligned to O-P command split.
+
+### Notes
+- Product **VERSION** `2.3.0`. Spring Boot **2.7.18** remains intentionally pinned.
+- Companion: after edits to `./springboot2`, run  
+  `sha256sum springboot2 | awk '{print $1}' > springboot2.sha256`
+
+---
+
 ## [2.2.0] - 2026-07-15
 
 ### Changed (breaking for JSON consumers)
@@ -109,7 +131,8 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) 
 
 **GitHub**: https://github.com/Wilgat/springboot2
 
-[Unreleased]: https://github.com/Wilgat/springboot2/compare/2.2.0...HEAD
+[Unreleased]: https://github.com/Wilgat/springboot2/compare/2.3.0...HEAD
+[2.3.0]: https://github.com/Wilgat/springboot2/compare/2.2.0...2.3.0
 [2.2.0]: https://github.com/Wilgat/springboot2/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/Wilgat/springboot2/compare/2.0.1...2.1.0
 [2.0.1]: https://github.com/Wilgat/springboot2/compare/2.0.0...2.0.1

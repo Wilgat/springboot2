@@ -8,10 +8,10 @@ This requirement is the **project Single Source of Truth** for **CLI self-manage
 
 It defines lifecycle capabilities and safety rules for this shell project’s self-management commands.
 
-**Scope:** Lifecycle capabilities and safety rules for `version-check`, `self-update`, `self-uninstall`, and `about` (plus reuse of install primitives).  
-**Out of scope (cited, not re-owned):** Full CLI dispatcher catalog (`requirement-shell-cli-interface.md`); pure re-run matrix (`requirement-shell-idempotency.md`); full online-install algorithm depth; Type 1 host bootstrap / Type 2 system-user app ops.
+**Scope:** Lifecycle capabilities and safety rules for **ship-unit** commands only: `version-check`, `self-update` / `self-upgrade`, `self-uninstall`, and `about` (plus reuse of ship-unit install primitives).  
+**Out of scope (cited, not re-owned):** Payload `install` / `uninstall` / domain setup (`requirement-shell-payload-online-install.md`, `requirement-springboot2-domain.md`); full CLI dispatcher catalog (`requirement-shell-cli-interface.md`); pure re-run matrix (`requirement-shell-idempotency.md`); Type 1/2 ops.
 
-**Must not confuse with:** OS package managers, domain product start/stop ops, dedicated system-user policy, or non-CLI “self-management.”
+**Must not confuse with:** Payload `install`/`uninstall` (environment/project), OS package managers, or domain start/stop.
 
 ---
 
@@ -21,7 +21,7 @@ It defines lifecycle capabilities and safety rules for this shell project’s se
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.2.0` |
+| **VERSION** | `2.3.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -39,10 +39,13 @@ User-facing names **MUST** be stable unless this requirement is explicitly revis
 
 | Command | Purpose | Typical flags |
 |---------|---------|----------------|
-| `version-check` | Compare **local** version with **remote/latest** | `--quiet`, `--json` |
-| `self-update` | Update the installed CLI to a newer trusted release | `--force` (reinstall / allow policy-gated non-default paths) |
-| `self-uninstall` | Remove the managed CLI binary and clean PATH **only when safe** | `--force` (skip interactive confirm when designed) |
+| `version-check` | Compare **local CLI** version with **remote/latest** | `--quiet`, `--json` |
+| `self-update` | Update the installed **CLI ship unit** to a newer trusted release | `--force` |
+| `self-upgrade` | **Alias** of `self-update` (same handler) | `--force` |
+| `self-uninstall` | Remove the managed **CLI binary** only; clean PATH when safe | `--force` |
 | `about` | Diagnostics and version / install context | `--quiet`, `--json` |
+
+**Not owned here:** `install` / `uninstall` (payload) — see `requirement-shell-payload-online-install.md`.
 
 Shell implementation **SHOULD** keep install/lifecycle and dispatch callable as clear helpers. **This product** uses A names (`inst_perform_install`, `inst_self_update`, `app_main`, …) — product law (§3.1 option 1). Domain helpers (`setup_*` / `run_springboot_project`) are allowed for Spring Boot specialization.
 
@@ -128,7 +131,7 @@ Root may write global install path; non-root uses user path. Do not assume root 
 | **Uninstall** | `inst_self_uninstall` (bin resolve via `util_get_install_bin_path`; confirm / `confirm_required`; remove; optional PATH cleanup) |
 | **PATH ensure** | `path_add_shell` / `path_in_path` on user install |
 | **Privilege** | Type 0 only for self-management surface; no dedicated system user |
-| **Version SSOT** | `VERSION` default `2.2.0` in script config block (`VERSION="2.2.0"`) |
+| **Version SSOT** | `VERSION` default `2.3.0` in script config block (`VERSION="2.3.0"`) |
 
 #### Normative acceptance behaviors (this project)
 

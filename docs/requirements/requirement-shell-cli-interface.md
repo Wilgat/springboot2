@@ -19,7 +19,7 @@ It defines a **Type 0–centric self-managed shell CLI** (install / update / uni
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.2.0` |
+| **VERSION** | `2.3.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -64,7 +64,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 
 1. **Single entry:** A single main dispatcher (e.g. `app_main`) **MUST** parse global flags and route commands.
 2. **Unknown command:** **MUST** fail loudly with a clear error and pointer to `help` (via output SSOT).
-3. **Zero-arg hybrid (this product):** Empty argv **MUST NOT** dump help. **Not installed** → install-ensure; **installed** → domain default run (not pure install no-op). Full contract: `requirement-shell-cli-zero-arguments.md` hybrid supersession + `requirement-springboot2-domain.md`.
+3. **Zero-arg Type O-P (this product):** Empty argv **MUST NOT** dump help. **Not installed** → ship-unit + payload ensure; **installed** → non-interactive upgrade policy + domain run. Full contract: `requirement-shell-cli-zero-arguments.md` + `requirement-springboot2-domain.md` + term `payload-installer`.
 4. **Idempotent install skip:** Install **MUST** no-op when already installed unless force/reinstall policy is set.
 5. **No raw user I/O:** User-facing messages **MUST** go through the centralized `out_*` system (see output template/term).
 
@@ -98,7 +98,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | **Primary executable** | Repo root `./springboot2` (bash `#!/bin/bash`, single-file for `curl \| sh`) |
 | **Dispatcher** | `app_main` (always invoked at end of script: `app_main "$@"` — no `${0##*/}` / APP_NAME basename gate; required for `curl \| sh`) |
 | **Output SSOT** | `out_text` + wrappers (`out_info`, `out_success`, `out_warn`, `out_error`, `out_die`, `out_plain`, `out_json`, …) |
-| **Version SSOT** | `VERSION` default `2.2.0` (script header / config block: `VERSION="2.2.0"`) |
+| **Version SSOT** | `VERSION` default `2.3.0` (script header / config block: `VERSION="2.3.0"`) |
 | **Install paths** | Global: `GLOBAL_BIN` default `/usr/local/bin`; User: `USER_BIN` default `${HOME}/.local/bin` |
 | **Remote channel env (help surface)** | `REPO_USER` / `REPO_NAME` (defaults `Wilgat` / `springboot2`); `SCRIPT_URL` composed default `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}` (literal product default: `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2`; override via env). **`help` / `about` MUST list these operator channel vars as designed — MUST NOT list `CHECKSUM`** (install-path runtime pin only; see `requirement-shell-automatic-checksum.md`) |
 | **Type 1 / Type 2 commands** | **None** on current surface — this tool is CLI lifecycle only |
@@ -106,19 +106,21 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 
 #### Supported commands (normative for this project)
 
-| Command | Type | Handler (current) | Required behavior |
-|---------|------|-------------------|-------------------|
-| *(no args — empty argv)* | Type 0 / domain | Hybrid: **not installed** → install-ensure; **installed** → domain default `run` — never help; see `requirement-shell-cli-zero-arguments.md` hybrid supersession |
-| `install` | Type 0 | *(no separate case)* | First install via empty argv auto-install only (not a routed subcommand) |
-| `version` | Type 0 | version dispatch in `app_main` | Print local version; JSON object when `--json` |
-| `about` | Type 0 | `app_about` | Diagnostics incl. domain fields; JSON when `--json`; **no `CHECKSUM` field** |
-| `status` | Type 0 / domain | `app_about` (alias) | Same diagnostics surface as about |
-| `version-check` | Type 0 | `ver_check` | Compare local vs remote `VERSION` from `SCRIPT_URL` |
-| `self-update` | Type 0 | `inst_self_update` | Fetch remote version; reinstall when policy allows; reuse install primitives |
-| `self-uninstall` | Type 0 | `inst_self_uninstall` | Remove managed binary; confirm_required without force |
-| `reinstall` | Type 0 / domain | `FORCE_REINSTALL=1` + `inst_perform_install` then domain pipeline | Force CLI reinstall then continue domain (often with `--no-run` in automation) |
-| `run` | domain | domain pipeline | Explicit domain setup/run |
-| `help` | Type 0 | `app_help` | Full usage; domain flags + Type 0; **not** `CHECKSUM` |
+| Command | Layer | Handler | Required behavior |
+|---------|-------|---------|-------------------|
+| *(no args — empty argv)* | Combined O-P | ship ensure + payload `run` | Not installed → ship-unit install **then** payload; installed → non-interactive `self-update` policy + payload — never help — `requirement-shell-payload-online-install.md` |
+| `install` | **Payload** | `payload_install` | Ensure SDKMAN/Java/Maven/project only — **not** ship-unit download |
+| `uninstall` | **Payload** | `payload_uninstall` | Remove managed `PROJECT_DIR` only; confirm unless `--force` — **not** CLI binary |
+| `run` | Payload + run | domain pipeline | Payload ensure + build/run |
+| `reinstall` | Ship + payload | force `inst_perform_install` then payload | Force CLI replace then payload setup |
+| `version` | Ship meta | version dispatch | Local CLI version; JSON when `--json` |
+| `about` | Ship + payload diag | `app_about` | Diagnostics; **no `CHECKSUM` field** |
+| `status` | Alias | `app_about` | Same as about |
+| `version-check` | **Ship unit** | `ver_check` | Local vs remote ship-unit VERSION |
+| `self-update` | **Ship unit** | `inst_self_update` | Upgrade CLI binary from channel |
+| `self-upgrade` | **Ship unit** | `inst_self_update` | Alias of `self-update` |
+| `self-uninstall` | **Ship unit** | `inst_self_uninstall` | Remove CLI binary only; confirm_required without force |
+| `help` | Meta | `app_help` | Full usage; both layers; **not** `CHECKSUM` |
 
 #### Global flags (normative wiring for this project)
 
@@ -135,7 +137,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 #### Dispatcher acceptance criteria (this project)
 
 1. Unknown token after flag parse → `out_die` with pointer to `springboot2 help`.  
-2. Empty argv **hybrid** (not Type N help): not installed → install-ensure; installed → domain run — see zero-arguments specialization.  
+2. Empty argv **Type O-P** (not Type N help; not Type O-S binary-only): not installed → ship unit + payload; installed → upgrade policy + domain run — see zero-arguments specialization.  
 3. Command routing table in `app_main` **must** include every supported command row above (except intentional non-command empty-argv install).  
 4. Help text **must** stay aligned with routed commands/flags (no orphan listings).  
 5. User-facing strings **must not** use raw `echo`/`printf` outside Output SSOT.
@@ -180,7 +182,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 3. Force manual `sudo` as the only UX for every elevated sub-step when internal escalation is the designed pattern (when Type 1 is introduced).  
 4. Bypass Output SSOT with raw user-facing `echo`/`printf` for normal messages.  
 5. Break the contract that `--json` implies quiet and machine-oriented output.  
-6. Drop zero-arg install-ensure for the classic `curl | sh` path (including already-installed success no-op) without an explicit requirement change (`requirement-shell-cli-zero-arguments.md`).  
+6. Drop zero-arg Type O-P combined ensure for the classic `curl | bash` path (or collapse to binary-only / help) without an explicit requirement change (`requirement-shell-cli-zero-arguments.md`).  
 7. Document flags in help that the dispatcher does not parse (or leave `--force` documented-only).  
 8. Invent a dedicated system user as mandatory for Type 0 CLI self-management without a specialized architecture requirement.
 
@@ -209,7 +211,7 @@ This requirement is satisfied for the springboot2 shell CLI when all of the foll
 | `docs/requirements/requirement-shell-self-management.md` | Lifecycle command semantics |
 | `docs/requirements/requirement-shell-output-requirements.md` | Output SSOT and channels |
 | `docs/requirements/requirement-shell-interactive-vs-noninteractive.md` | TTY / automation mode behavior |
-| `docs/requirements/requirement-shell-cli-zero-arguments.md` | Empty argv hybrid (install when absent; domain when installed) |
+| `docs/requirements/requirement-shell-cli-zero-arguments.md` | Empty argv Type O-P payload installer (ship unit + payload) |
 | `docs/requirements/requirement-springboot2-domain.md` | Domain commands/flags / pipeline |
 | `docs/requirements/requirement-shell-idempotency.md` | Re-run safety for ensure ops |
 | `docs/requirements/requirement-shell-modular-function-design.md` | Live function families (`out_*`, lifecycle, util, domain) |
@@ -223,7 +225,7 @@ This requirement is satisfied for the springboot2 shell CLI when all of the foll
 **Alignment**: Registry `docs/requirements/index.md`; CIAO Principles 1, 2, 3, 5, 8, 14, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite). R1–R6 Notes sync.
 
 
-**Empty argv (this product):** See `requirement-shell-cli-zero-arguments.md` § Empty argv specialization — installed empty argv is **domain run**, not install-ensure no-op.
+**Empty argv (this product):** See `requirement-shell-cli-zero-arguments.md` — Type O-P **combined ensure** (ship unit + payload); not Type N help; not Type O-S binary-only.
 
 
 ### Live function inventory (ship unit — A naming)
@@ -253,6 +255,8 @@ In addition to Type 0 lifecycle, **springboot2** exposes domain setup/run:
 | `--reset` | **Implemented** — sets `FORCE_REINSTALL` for project regenerate |
 | `status` | **Implemented** — about alias |
 | `reinstall` | **Implemented** — force install then domain pipeline |
-| `install` subcommand | **Intentional absent** — first install via empty argv only |
+| `install` / `uninstall` | **Implemented** — payload layer (`payload_install` / `payload_uninstall`) |
+| `self-update` / `self-upgrade` / `self-uninstall` | **Implemented** — ship-unit layer only |
+| Product class | **Type O-P** — `requirement-shell-payload-online-install.md` + term `payload-installer` |
 
 Type 0-only “no domain” claims are **not** sufficient product law for this ship unit.

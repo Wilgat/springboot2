@@ -5,20 +5,19 @@
 #
 # FULL FEATURED SELF-MANAGED PROGRAM (CIAO / CIAO-Lite Compliant)
 #
-# This is the single executable POSIX /bin/sh implementation of the selfmanaged
-# tool (Type 0 bootstrap: install, version-check, self-update, self-uninstall, about).
+# Type O-P payload online installer: ship-unit self-care + payload install/uninstall.
 # Project requirements (docs/requirements/ only — never cite templates here):
+# - requirement-shell-payload-online-install.md  (Type O-P combined ensure; install/uninstall vs self-*)
 # - requirement-shell-cli-interface.md
-# - requirement-shell-cli-zero-arguments.md  (Type O empty argv = install-ensure)
+# - requirement-shell-cli-zero-arguments.md
 # - requirement-shell-idempotency.md
-# - requirement-shell-self-management.md
+# - requirement-shell-self-management.md      (self-update / self-uninstall / version-check)
 # - requirement-shell-modular-function-design.md
 # - requirement-shell-output-requirements.md
 # - requirement-shell-interactive-vs-noninteractive.md
 # - requirement-shell-automatic-checksum.md
-# - requirement-springboot2-domain.md
+# - requirement-springboot2-domain.md         (payload pins: SDKMAN/Java/Maven/project)
 # - requirement-shell-cli-storage.md
-# - requirement-shell-cli-zero-arguments.md (hybrid: empty+installed → domain run)
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
 # Philosophy: CIAO (Caution • Intentional • Anti-fragile • Over-engineered)
@@ -43,10 +42,10 @@ APP_NAME="springboot2"
 : "${APP_NAME:=springboot2}"
 : "${APP_DESC:=Spring Boot 2.7.18 quick setup (SDKMAN / Java / Maven)}"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
-: "${DESCRIPTION:=Spring Boot 2.7.18 environment + Type 0 self-management (install, version-check, self-update, self-uninstall, about/run).}"
+: "${DESCRIPTION:=Spring Boot 2.7.18 payload online installer (CLI self-* + payload install/uninstall + run).}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="2.2.0"
-: "${VERSION:=2.2.0}"
+VERSION="2.3.0"
+: "${VERSION:=2.3.0}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -2792,7 +2791,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=springboot2}"
-    : "${VERSION:=2.2.0}"
+    : "${VERSION:=2.3.0}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path
@@ -2828,7 +2827,7 @@ app_help() {
             "app" "${APP_NAME}" \
             "version" "${VERSION}" \
             "message" "Help text available in human mode. Run without --json." \
-            "note" "Use --json with status, about, version, etc. for machine output."
+            "note" "Use --json with status, about, version, install, uninstall, etc."
         return 0
     fi
 
@@ -2846,45 +2845,137 @@ app_help() {
         eol_warning="  • Spring Boot 2.7.x reached OSS end-of-support in late 2023."
     fi
 
-    out_plain "${APP_NAME} v${VERSION} — Spring Boot ${SPRINGBOOT_VER} Quick Setup & Runner"
+    out_plain "${APP_NAME} v${VERSION} — Spring Boot ${SPRINGBOOT_VER} payload online installer"
     out_plain ""
-    out_plain "The friendliest way to run and maintain Spring Boot ${SPRINGBOOT_VER} projects."
+    out_plain "Type O-P: one-liner installs the CLI and the Spring Boot environment (payload)."
     out_plain ""
     out_plain "Usage:"
-    out_plain "  ${APP_NAME}                          Setup environment + build + run (preserves project)"
-    out_plain "  ${APP_NAME} --reset                  Full reset: delete and regenerate project files"
-    out_plain "  ${APP_NAME} --project-dir <path>     Run against an existing legacy project"
-    out_plain "  ${APP_NAME} --no-run                 Setup only (no build/run) — useful for CI/Docker"
-    out_plain "  ${APP_NAME} status                   Show application status"
-    out_plain "  ${APP_NAME} about                    Full diagnostics (Java, Maven, project, etc.)"
-    out_plain "  ${APP_NAME} version                  Show version"
-    out_plain "  ${APP_NAME} version-check            Compare with latest"
-    out_plain "  ${APP_NAME} self-update              Update to latest version"
-    out_plain "  ${APP_NAME} self-uninstall           Remove from the system"
-    out_plain "  ${APP_NAME} reinstall                Force reinstall"
+    out_plain "  ${APP_NAME}                          Combined ensure: CLI if needed + payload + build/run"
+    out_plain "  ${APP_NAME} install                  Payload only: SDKMAN/Java/Maven/project (no app run)"
+    out_plain "  ${APP_NAME} uninstall                Payload only: remove managed project dir (not the CLI)"
+    out_plain "  ${APP_NAME} run                      Payload ensure + build + run"
+    out_plain "  ${APP_NAME} --no-run                 Payload setup only (no build/run)"
+    out_plain "  ${APP_NAME} --reset                  Force regenerate project files"
+    out_plain "  ${APP_NAME} --project-dir <path>     Use custom project directory"
+    out_plain "  ${APP_NAME} status                   Diagnostics (alias of about)"
+    out_plain "  ${APP_NAME} about                    Full diagnostics"
+    out_plain "  ${APP_NAME} version                  Local CLI version"
+    out_plain "  ${APP_NAME} version-check            Compare CLI with remote channel"
+    out_plain "  ${APP_NAME} self-update              Update the CLI ship unit (alias: self-upgrade)"
+    out_plain "  ${APP_NAME} self-uninstall           Remove the CLI binary only"
+    out_plain "  ${APP_NAME} reinstall                Force reinstall CLI then payload setup"
     out_plain "  ${APP_NAME} help                     This help"
     out_plain ""
+    out_plain "Command layers:"
+    out_plain "  Payload:  install | uninstall | run | reinstall (project/toolchain)"
+    out_plain "  Ship unit: self-update | self-upgrade | self-uninstall | version-check"
+    out_plain ""
     out_plain "Options:"
-    out_plain "  --project-dir <path>   Use custom project directory (default: ~/springboot-${APP_NAME})"
-    out_plain "  --reset                Force full project reset (deletes and regenerates everything)"
-    out_plain "  --no-run               Setup environment and project only, skip build & run"
+    out_plain "  --project-dir <path>   Project directory (default: ~/springboot-${APP_NAME})"
+    out_plain "  --reset                Force full project reset"
+    out_plain "  --no-run               Setup only, skip build & run"
+    out_plain "  --force                Force reinstall / skip confirms where designed"
     out_plain "  --quiet, -q            Suppress non-error messages"
-    out_plain "  --json                 Machine-readable JSON output (implies --quiet)"
+    out_plain "  --json                 Machine-readable JSON (implies --quiet)"
     out_plain ""
     out_plain "Important Notes:"
-    out_plain "  • Normal run preserves your existing project files, pom.xml, and source code."
+    out_plain "  • install/uninstall = payload (environment/project). self-* = this CLI script only."
+    out_plain "  • Normal run preserves existing project files unless --reset / --force."
     if [ -n "${eol_warning}" ]; then
         out_plain "${eol_warning}"
     fi
-    out_plain "  • This tool is intended for projects that need or prefer Spring Boot ${SPRINGBOOT_VER}."
+    out_plain "  • Intended for Spring Boot ${SPRINGBOOT_VER} environments."
     out_plain ""
     out_plain "Examples:"
-    out_plain "  ${APP_NAME}                              # Normal run (recommended)"
-    out_plain "  ${APP_NAME} --project-dir /my/old/project"
-    out_plain "  ${APP_NAME} --no-run                     # Prepare for Docker/CI"
-    out_plain "  ${APP_NAME} --reset                      # Clean slate"
+    out_plain "  curl -fsSL <SCRIPT_URL> | bash          # first-time combined ensure"
+    out_plain "  ${APP_NAME} install --no-run            # payload setup for CI"
+    out_plain "  ${APP_NAME} self-update                 # upgrade CLI only"
+    out_plain "  ${APP_NAME} uninstall --force           # remove project dir only"
     out_plain "  ${APP_NAME} about --json"
     out_plain ""
+}
+
+# =============================================================================
+# payload_install() — ensure Spring Boot environment payload (not the CLI binary)
+# =============================================================================
+# requirement-shell-payload-online-install.md: `install` = payload only.
+# =============================================================================
+payload_install() {
+    : "${NO_RUN:=1}"
+    : "${PROJECT_DIR:=${HOME}/springboot-${APP_NAME}}"
+    : "${JSON:=0}"
+
+    out_info "Payload install: ensuring SDKMAN / Java / Maven / project..."
+    check_alpine_requirements || return 1
+    setup_sdkman || return 1
+    setup_java || return 1
+    setup_maven || return 1
+    setup_springboot_project || return 1
+
+    if [ "${JSON}" -eq 1 ]; then
+        out_json "out_success" "" \
+            "message" "Payload environment and project ready" \
+            "project_dir" "${PROJECT_DIR}" \
+            "layer" "payload"
+    else
+        out_success "Payload installed (environment + project)."
+        out_success "Project location: ${PROJECT_DIR}"
+        out_info "CLI ship unit is unchanged (use self-update / self-uninstall for the script)."
+    fi
+    return 0
+}
+
+# =============================================================================
+# payload_uninstall() — remove managed project payload only (not the CLI)
+# =============================================================================
+payload_uninstall() {
+    : "${PROJECT_DIR:=${HOME}/springboot-${APP_NAME}}"
+    : "${FORCE:=0}"
+    : "${FORCE_REINSTALL:=0}"
+    : "${JSON:=0}"
+    : "${QUIET:=0}"
+
+    if [ "${FORCE}" -eq 1 ]; then
+        FORCE_REINSTALL=1
+    fi
+
+    if [ ! -d "${PROJECT_DIR}" ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json "out_success" "Payload project not present. Nothing to uninstall." \
+                "project_dir" "${PROJECT_DIR}" "layer" "payload"
+        else
+            out_success "Payload project not present at ${PROJECT_DIR}. Nothing to uninstall."
+        fi
+        return 0
+    fi
+
+    if [ "${FORCE_REINSTALL:-0}" -eq 0 ] && [ "${FORCE:-0}" -eq 0 ]; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Confirmation required to remove payload project ${PROJECT_DIR}" "confirm_required"
+        else
+            out_error "Refusing to remove payload project without --force: ${PROJECT_DIR}"
+            out_info "Run: ${APP_NAME} uninstall --force"
+        fi
+        return 1
+    fi
+
+    if ! rm -rf "${PROJECT_DIR}"; then
+        if [ "${JSON}" -eq 1 ]; then
+            out_json_error "Failed to remove payload project ${PROJECT_DIR}" "io_error"
+        else
+            out_error "Failed to remove payload project: ${PROJECT_DIR}"
+        fi
+        return 1
+    fi
+
+    if [ "${JSON}" -eq 1 ]; then
+        out_json "out_success" "Payload project removed." \
+            "project_dir" "${PROJECT_DIR}" "layer" "payload"
+    else
+        out_success "Payload project removed: ${PROJECT_DIR}"
+        out_info "CLI binary was not removed (use self-uninstall for the script)."
+    fi
+    return 0
 }
 
 
@@ -2957,22 +3048,39 @@ app_main() {
     export TMPDIR="${EFFECTIVE_STORAGE_DIR}"
 
     local cmd="run"
-
-    # === HYBRID EMPTY ARGV (bootstrap A Type O + B domain) ===
-    # Not installed → install-ensure then exit (never fall through to domain on fail).
-    # Installed → domain default run (hybrid supersession of pure Type O no-op).
-    # SSOT: requirement-shell-cli-zero-arguments.md + requirement-springboot2-domain.md
+    local empty_argv=0
     if [ $# -eq 0 ]; then
+        empty_argv=1
+    fi
+
+    # === Type O-P EMPTY ARGV (payload online installer) ===
+    # Ship-unit ensure first (never exit after binary-only success).
+    # Non-interactive when already installed: self-update policy (already-latest OK).
+    # Then fall through to payload default (cmd=run) unless later flags change cmd.
+    # SSOT: requirement-shell-payload-online-install.md + requirement-shell-cli-zero-arguments.md
+    if [ "${empty_argv}" -eq 1 ]; then
         if ! inst_is_installed; then
             if [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
-                inst_perform_install
-                exit $?
+                if ! inst_perform_install; then
+                    exit 1
+                fi
             else
-                inst_maybe_install
-                exit $?
+                if ! inst_maybe_install; then
+                    exit 1
+                fi
+            fi
+            # continue to payload — do not exit after ship-unit place
+        else
+            # Non-interactive re-run: upgrade ship unit when channel says so
+            if [ ! -t 0 ] || [ ! -t 1 ] || [ "${JSON}" -eq 1 ] || [ "${QUIET}" -eq 1 ]; then
+                inst_self_update || true
+                # inst_self_update returns non-zero on refuse-downgrade / network;
+                # network fail should not block payload when binary already works —
+                # but refuse-downgrade is success path (non-zero only on hard fail).
+                # Re-check: if self-update hard-failed with missing channel, continue payload.
             fi
         fi
-        # installed + empty argv → domain (cmd=run); flags may still be empty
+        cmd="run"
     fi
 
     # === FLAG-FIRST ARGUMENT PARSING (consistent with pomo style) ===
@@ -3003,6 +3111,8 @@ app_main() {
     done
 
     # === Command Dispatch ===
+    # Payload: install | uninstall | run | reinstall
+    # Ship unit: self-update | self-upgrade | self-uninstall | version-check
     case "${cmd}" in
         version)
             if [ "${JSON}" -eq 1 ]; then
@@ -3018,7 +3128,7 @@ app_main() {
             exit $?
             ;;
 
-        self-update)
+        self-update|self-upgrade)
             inst_self_update
             exit $?
             ;;
@@ -3028,8 +3138,19 @@ app_main() {
             exit $?
             ;;
 
+        install)
+            # Payload ensure only (not ship-unit download)
+            payload_install
+            exit $?
+            ;;
+
+        uninstall)
+            # Payload project remove only (not CLI binary)
+            payload_uninstall
+            exit $?
+            ;;
+
         about|status)
-            # status is domain diagnostics alias (same rich about surface)
             app_about
             exit $?
             ;;
@@ -3040,34 +3161,33 @@ app_main() {
             ;;
 
         reinstall)
-            # Force reinstall of CLI binary then fall through to domain pipeline
+            # Force reinstall of CLI ship unit then payload pipeline
             FORCE_REINSTALL=1
             FORCE=1
             inst_perform_install || exit $?
-            # after reinstall, continue domain setup (cmd treated as run)
             ;;
 
         run)
-            # Normal execution flow
             ;;
         *)
-            out_die "Invalid command: ${cmd}"
+            out_die "Invalid command: ${cmd}. Try: ${APP_NAME} help"
             ;;
     esac
 
-    # === Main Setup Flow ===
-    check_alpine_requirements
-    setup_sdkman
-    setup_java
-    setup_maven
-    setup_springboot_project
+    # === Payload pipeline (run / reinstall / empty-argv default) ===
+    check_alpine_requirements || exit 1
+    setup_sdkman || exit 1
+    setup_java || exit 1
+    setup_maven || exit 1
+    setup_springboot_project || exit 1
 
     if [ "${NO_RUN}" -eq 1 ]; then
         if [ "${JSON}" -eq 1 ]; then
             out_json "out_success" "" \
                 "message" "Environment and project setup completed" \
                 "project_dir" "${PROJECT_DIR}" \
-                "no_run" "true"
+                "no_run" "true" \
+                "layer" "payload"
         else
             out_success "Environment and project setup completed (--no-run)."
             out_success "Project location: ${PROJECT_DIR}"
@@ -3075,7 +3195,6 @@ app_main() {
         exit 0
     fi
 
-    # Normal build + run
     run_springboot_project
 }
 

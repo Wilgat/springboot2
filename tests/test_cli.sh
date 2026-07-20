@@ -53,11 +53,15 @@ run_test_cli() {
     assert_contains "help lists version-check" "$_out" "version-check"
     assert_contains "help lists self-update" "$_out" "self-update"
     assert_contains "help lists self-uninstall" "$_out" "self-uninstall"
+    assert_contains "help lists self-upgrade" "$_out" "self-upgrade"
+    assert_contains "help lists payload install" "$_out" "install"
+    assert_contains "help lists payload uninstall" "$_out" "uninstall"
     assert_contains "help lists about" "$_out" "about"
     assert_contains "help lists --json" "$_out" "--json"
     assert_contains "help lists --no-run" "$_out" "--no-run"
     assert_contains "help lists --project-dir" "$_out" "--project-dir"
     assert_contains "help mentions Spring Boot pin" "$_out" "${SPRINGBOOT_VER}"
+    assert_contains "help separates payload vs ship layers" "$_out" "Payload"
     assert_not_contains "help must not list CHECKSUM" "$_out" "CHECKSUM"
 
     # --- help (json): short object, not full prose ---
