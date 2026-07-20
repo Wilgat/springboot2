@@ -32,7 +32,7 @@ No public network for core lifecycle: install tests serve the checkout over `127
 | Shape A companion + Shape B `CHECKSUM` pin | Install path verifies; transparency messages asserted |
 | No `install` subcommand | First install is empty argv only (by design) |
 
-Product law naming: live `output_*` / lifecycle helpers (**§3.1 option 2**), not seed `out_*`/`inst_*`/`app_*`.
+Product law naming: A prefixes `out_*`/`inst_*`/`app_*` (**§3.1 option 1**).
 
 ## Bootstrap specialize (A→B)
 

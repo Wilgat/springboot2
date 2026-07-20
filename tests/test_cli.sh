@@ -4,7 +4,7 @@
 # Covers: syntax, version, help, about, unknown command, quiet/json modes,
 # help domain + Type 0 surface, env -u HOME, zero-arg install failure exit,
 # self-uninstall fail-closed contract (law) vs live gaps.
-# Live JSON type string is "error" / "success" (not seed out_error/out_success).
+# Live JSON type strings: "out_error" / "out_success" (A naming). Domain types (about, version, …) unchanged.
 # =============================================================================
 
 # shellcheck source=helpers.sh
@@ -64,7 +64,7 @@ run_test_cli() {
     _out=$(sh "${SCRIPT}" --json help 2>/dev/null)
     _ec=$?
     assert_eq "help --json exit 0" 0 "$_ec"
-    assert_contains "help --json type success" "$_out" '"type":"success"'
+    assert_contains "help --json type success" "$_out" '"type":"out_success"'
     assert_contains "help --json mentions human mode" "$_out" "Help text"
 
     # --- about (json): no CHECKSUM field; storage resolve fields ---
@@ -88,7 +88,6 @@ run_test_cli() {
     assert_eq "about --json under isolated HOME exit 0" 0 "$_ec"
     # Must isolate by app name; user may be real username even under isolated HOME
     assert_contains "isolated about effective_storage has app" "$_out" "${APP_NAME}"
-    # storage_dir fallback should be under isolated HOME/.cache when not using shm/tmp preference
     # effective_storage is often /dev/shm or /tmp when writable — still must contain APP_NAME
     case "$_out" in
         *'"effective_storage":"'*"${APP_NAME}"*) t_pass "effective_storage path contains ${APP_NAME}" ;;
@@ -96,19 +95,42 @@ run_test_cli() {
     esac
     # STORAGE_DIR fallback field should reference cache path with app+user shape
     assert_contains "storage_dir field present under isolation" "$_out" '"storage_dir"'
+    # STORAGE_DIR env override appears on storage_dir (tier-3 config field), not necessarily effective
+    _custom="${CI_HOME}/custom-storage-root"
+    _out=$(
+        HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" STORAGE_DIR="${_custom}" \
+        sh "${SCRIPT}" --json about 2>/dev/null
+    )
+    _ec=$?
+    assert_eq "about --json with STORAGE_DIR override exit 0" 0 "$_ec"
+    assert_contains "storage_dir honors STORAGE_DIR env" "$_out" "custom-storage-root"
+    # Effective root must exist after resolve (create-before-return)
+    _eff=$(printf '%s' "$_out" | sed -n 's/.*"effective_storage":"\([^"]*\)".*/\1/p' | head -n1)
+    if [ -n "$_eff" ] && [ -d "$_eff" ]; then
+        t_pass "effective_storage directory exists after resolve"
+    else
+        t_fail "effective_storage missing or not a directory: '$(_trunc "${_eff:-empty}")'"
+    fi
+    # Username isolation segment present in effective path (id -un under isolation)
+    _who=$(id -un 2>/dev/null || echo unknown)
+    case "$_out" in
+        *'"effective_storage":"'*"${_who}"*|*'"effective_storage":"'*"unknown"*) \
+            t_pass "effective_storage includes user segment" ;;
+        *) t_fail "effective_storage missing user segment for '${_who}': $(_trunc "$_out")" ;;
+    esac
     ci_cleanup_env
 
-    # --- unknown command (die → exit 1; live JSON type "error") ---
+    # --- unknown command (out_die → exit 1; JSON type "out_error") ---
     _err=$(sh "${SCRIPT}" no-such-command 2>&1 >/dev/null)
     _ec=$?
     assert_eq "unknown command exit 1" 1 "$_ec"
     assert_contains "unknown command error text" "$_err" "Invalid command"
 
-    # JSON errors go to stdout via output_json; capture both streams
+    # JSON errors go to stdout via out_json; capture both streams
     _err=$(sh "${SCRIPT}" --json no-such-command 2>&1)
     _ec=$?
     assert_eq "unknown command --json exit 1" 1 "$_ec"
-    assert_contains "unknown command --json type error" "$_err" '"type":"error"'
+    assert_contains "unknown command --json type error" "$_err" '"type":"out_error"'
 
     # --- quiet: version should not print info banners ---
     _out=$(sh "${SCRIPT}" --quiet version 2>/dev/null)
@@ -152,7 +174,7 @@ run_test_cli() {
 
     # --- self-uninstall fail-closed (product law / INC-20260713-002) ---
     # Live Gap: --force does not set FORCE_REINSTALL; JSON cancel uses broken
-    # output_json arg order. Assert law: refuse without force; binary remains.
+    # out_json arg order. Assert law: refuse without force; binary remains.
     ci_isolated_env
     mkdir -p "${CI_USER_BIN}"
     cp "${SCRIPT}" "${CI_USER_BIN}/${APP_NAME}"

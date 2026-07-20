@@ -22,7 +22,7 @@ No compiled artifacts, no JARs, no sensitive data in the repo.
 
 ### Code Quality Review
 - **Structure**: Single executable Bash script (`springboot2`, no extension) + supporting docs (`README.md`, `CHANGELOG.md`, `CIAO-PRINCIPLES.md`, `LICENSE.md`).
-- **Style**: Extremely intentional verbosity. Every critical section is protected by repeated safe defaults, loud `!!! DO NOT MODIFY OR SIMPLIFY !!!` warnings, and centralized functions (`die`, `output_text`, `output_json`). This is **not** sloppy — it is intentional anti-fragility.
+- **Style**: Extremely intentional verbosity. Every critical section is protected by repeated safe defaults, loud `!!! DO NOT MODIFY OR SIMPLIFY !!!` warnings, and centralized functions (`out_die`, `out_text`, `out_json`). This is **not** sloppy — it is intentional anti-fragility.
 - **Maintainability**: Excellent for its purpose. Self-contained, single point of entry, full JSON/quiet mode support for scripting.
 - **Compatibility**: Explicitly tested for user/global installs, Alpine, macOS, Ubuntu, Git Bash.
 
@@ -36,7 +36,7 @@ No compiled artifacts, no JARs, no sensitive data in the repo.
 - **Privilege handling**: Clean root vs. user detection (`id -u`). Install paths are isolated (`/usr/local/bin` vs. `~/.local/bin`). No unnecessary `sudo`.
 - **Temporary files**: Uses `mktemp -t` with proper error handling.
 - **Downloads**: All `curl -fsSL` from hardcoded, trusted URLs (GitHub raw + official SDKMAN). Self-update only compares version string — does **not** execute downloaded code blindly.
-- **Output control**: All console output routes through `output_text()` / `output_json()` functions. `--json` mode produces exactly one valid JSON object (machine-readable and safe for automation).
+- **Output control**: All console output routes through `out_text()` / `out_json()` functions. `--json` mode produces exactly one valid JSON object (machine-readable and safe for automation).
 - **Error handling**: Centralized `die()` with graceful exit and JSON support.
 - **SDKMAN & Java/Maven install**: Only trusted official sources; pinned versions for reproducibility.
 - **Defensive repetition**: Variables are re-defaulted inside functions — intentional CIAO style to survive partial environments or AI “cleanups”.

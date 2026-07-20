@@ -64,7 +64,7 @@ run_test_install_lifecycle() {
     # Binary still present and executable after domain path
     assert_file_exists "binary still present after domain --no-run" "${_sm_bin}"
 
-    # --- zero-arg Case C detect: global path present (is_installed true) still not help ---
+    # --- zero-arg Case C detect: global path present (inst_inst_is_installed true) still not help ---
     _global_bin="${CI_HOME}/global-bin"
     mkdir -p "${_global_bin}"
     cp "${SCRIPT}" "${_global_bin}/${APP_NAME}"
@@ -90,8 +90,7 @@ run_test_install_lifecycle() {
     assert_contains "about installed true" "$_out" '"installed":"true"'
 
     # --- version-check against local channel ---
-    # Live schema: type version_check, keys current_version / remote_version (not selfmanaged ver_check)
-    # Note: dispatcher always exit 0 after version_check even on network_error — Gap if non-zero expected.
+    # Bootstrap A schema: type ver_check, keys local_version / remote_version / is_latest
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
         PATH="${CI_USER_BIN}:${PATH}" \
@@ -100,9 +99,9 @@ run_test_install_lifecycle() {
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
     assert_eq "version-check --json exit 0" 0 "$_ec"
-    assert_contains "version-check --json type" "$_out" '"type":"version_check"'
+    assert_contains "version-check --json type" "$_out" '"type":"ver_check"'
     assert_contains "version-check --json remote_version" "$_out" "\"remote_version\":\"${PRODUCT_VERSION}\""
-    assert_contains "version-check --json current_version" "$_out" "\"current_version\":\"${PRODUCT_VERSION}\""
+    assert_contains "version-check --json local_version" "$_out" "\"local_version\":\"${PRODUCT_VERSION}\""
 
     # human version-check
     _out=$(
@@ -123,8 +122,8 @@ run_test_install_lifecycle() {
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
     assert_eq "self-update already-latest exit 0" 0 "$_ec"
-    assert_contains "self-update already-latest success type" "$_out" '"type":"success"'
-    assert_contains "self-update already-latest message" "$_out" "Already installed the latest version"
+    assert_contains "self-update already-latest success type" "$_out" '"type":"out_success"'
+    assert_contains "self-update already-latest message" "$_out" "Already running the latest version"
 
     # --- human force reinstall: Shape A companion transparency ---
     _out=$(
@@ -188,7 +187,7 @@ run_test_install_lifecycle() {
     fi
 
     # --- CHECKSUM pin Shape B mismatch / match ---
-    # Empty argv + JSON=1 env hits perform_self_install (flag parse not used; $# -eq 0).
+    # Empty argv + JSON=1 env hits inst_perform_install (flag parse not used; $# -eq 0).
     rm -f "${_sm_bin}"
     _out=$(
         HOME="${CI_HOME}" USER_BIN="${CI_USER_BIN}" SCRIPT_URL="${CI_SCRIPT_URL}" \
@@ -226,10 +225,13 @@ run_test_install_lifecycle() {
         )
         _ec=$?
         _err=$(cat "${_errf}" 2>/dev/null || true)
-        # Live product: success "Newer development version already installed" exit 0
-        # Law preferred by selfmanaged: downgrade_blocked exit 1 — accept live contract
-        assert_eq "self-update refuse-downgrade path exit 0 (live)" 0 "$_ec"
-        if printf '%s' "${_out}${_err}" | grep -qiE 'newer|already|latest|downgrade'; then
+        # Bootstrap A: refuse silent downgrade with non-zero exit
+        if [ "$_ec" -ne 0 ]; then
+            t_pass "self-update refuse-downgrade path non-zero (A)"
+        else
+            t_fail "self-update refuse-downgrade expected non-zero, got 0"
+        fi
+        if printf '%s' "${_out}${_err}" | grep -qiE 'newer|already|latest|downgrade|refuse'; then
             t_pass "self-update reports non-downgrade without force"
         else
             t_fail "self-update unexpected refuse-downgrade output: '$(_trunc "${_out}${_err}")'"

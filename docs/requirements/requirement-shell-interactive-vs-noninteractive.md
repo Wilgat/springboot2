@@ -19,13 +19,13 @@ It defines interactive vs non-interactive behavior for this shell project (globa
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.1.0` |
+| **VERSION** | `2.2.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
-| **Dispatcher** | `main_spring_boot_app` (not seed `app_main`) |
-| **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
-| **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
+| **Dispatcher** | `app_main` (A naming) |
+| **Output SSOT** | `out_text` / `out_json` / `out_json_error` (+ wrappers `out_info`/`out_success`/`out_warn`/`out_error`/`out_die`) |
+| **Install SSOT** | `inst_perform_install` / `inst_maybe_install` / `inst_is_installed` / `inst_get_version` |
 
 Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`) are **in addition** to Type 0 lifecycle.
 
@@ -54,7 +54,7 @@ For shell CLIs without a separate Config class, the **mode SSOT** is the **globa
 **Rules:**
 
 1. Prompt, color, and hang-sensitive decisions **MUST** respect these globals and/or the shared `prompt_*` helpers—not ad-hoc `read` scattered in domain logic.  
-2. After global flags are parsed in `main_spring_boot_app`, subsequent code **MUST** see the updated `QUIET` / `JSON` / `FORCE` / `DEBUG` values.  
+2. After global flags are parsed in `app_main`, subsequent code **MUST** see the updated `QUIET` / `JSON` / `FORCE` / `DEBUG` values.  
 3. Do **not** invent a second parallel mode system in individual commands.  
 4. Direct `[ -t … ]` checks **inside** `prompt_*` and carefully documented install helpers are allowed as part of the mode SSOT implementation; command business logic **SHOULD** call `prompt_*` instead of re-implementing prompt guards.
 
@@ -109,7 +109,7 @@ interactive   non-interactive
 |--------|------|
 | `prompt_yes_no` | **Only** yes/no confirmation path for destructive/optional confirms |
 | `prompt_ask` | **Only** simple value prompt path with default |
-| `msg_n` | Prompt fragment without newline (human only) |
+| `out_msg_n` | Prompt fragment without newline (human only) |
 
 **Rules:**
 
@@ -128,7 +128,7 @@ interactive   non-interactive
 | **Implementation** | Repo root `./springboot2` |
 | **Mode globals** | `TTY`, `QUIET`, `JSON`, `DEBUG`, `FORCE`, `FORCE_REINSTALL` |
 | **TTY init** | `[ -t 0 ] && [ -t 1 ] && TTY=1` near config block |
-| **Flag parse SSOT** | `main_spring_boot_app` |
+| **Flag parse SSOT** | `app_main` |
 | **Prompt SSOT** | `prompt_yes_no`, `prompt_ask` |
 | **Output SSOT** | `out_*` (`requirement-shell-output-requirements.md`) |
 | **No Node Config singleton** | Shell globals + helpers are the mode SSOT for this project |
@@ -137,10 +137,10 @@ interactive   non-interactive
 
 | Command / path | Interactive (TTY, not quiet/json) | Non-interactive / quiet / json |
 |----------------|-----------------------------------|--------------------------------|
-| Zero-arg, **not** installed (**Type O**) | `maybe_install`: show note + `prompt_yes_no` install confirm | Auto path: quiet/json zero-arg → `perform_self_install` without prompt; non-TTY human path → auto-install message + install |
-| Zero-arg, **already** installed local or global (**Type O**) | `perform_self_install` success no-op (“already installed”); **not** help; no re-download without force | Same (quiet/json: structured success no-op) |
+| Zero-arg, **not** installed (**Type O**) | `inst_maybe_install`: show note + `prompt_yes_no` install confirm | Auto path: quiet/json zero-arg → `inst_perform_install` without prompt; non-TTY human path → auto-install message + install |
+| Zero-arg, **already** installed local or global (**Type O**) | `inst_perform_install` success no-op (“already installed”); **not** help; no re-download without force | Same (quiet/json: structured success no-op) |
 | `install` | Install with human `out_*` messages | No prompt; honor force for reinstall; JSON structured results |
-| `self-uninstall` | `prompt_yes_no` unless `--force` | Without force: fail closed with explicit “requires --force” (JSON: `output_json_error` / `confirm_required`); never pretend user cancelled; with `--force`: remove without confirm |
+| `self-uninstall` | `prompt_yes_no` unless `--force` | Without force: fail closed with explicit “requires --force” (JSON: `out_json_error` / `confirm_required`); never pretend user cancelled; with `--force`: remove without confirm |
 | `self-update` / `version-check` | Human status messages | No prompts; fail loud if `SCRIPT_URL` missing; JSON structured results |
 | `about` / `version` / `help` | Human diagnostics / help | Quiet: suppress human; JSON: structured object only |
 | Colors | When `TTY=1` and not quiet/json | No color under quiet/json |
@@ -151,7 +151,7 @@ interactive   non-interactive
 |-----------|----------|
 | `JSON=1` or `QUIET=1` | Return **1** (no / cancel)—never `read` |
 | Not a TTY on stdin or stdout | Return **1** (no)—never `read` |
-| TTY + interactive | Prompt via `msg_n`; yes → 0, else → 1 |
+| TTY + interactive | Prompt via `out_msg_n`; yes → 0, else → 1 |
 | Uninstall without force + non-TTY | Confirm fails → uninstall cancelled (safe default) |
 | Uninstall with `--force` | Skip confirm entirely |
 
@@ -163,12 +163,12 @@ interactive   non-interactive
 | Not a TTY (and `INTERACTIVE` ≠ 1) | Return **default** without `read` |
 | TTY interactive | Show current/default via Output SSOT, then `read` |
 
-#### `maybe_install` contract (this project)
+#### `inst_maybe_install` contract (this project)
 
 | Condition | Behavior |
 |-----------|----------|
 | Already installed (force off) | No-op success |
-| Quiet or JSON | No prompt; return without installing from this helper (zero-arg quiet/json uses `perform_self_install` in `main_spring_boot_app` instead) |
+| Quiet or JSON | No prompt; return without installing from this helper (zero-arg quiet/json uses `inst_perform_install` in `app_main` instead) |
 | TTY interactive | Prompt install yes/no |
 | Non-TTY (pipe / automation) | **Auto-install** with clear human message when not quiet/json |
 
@@ -190,7 +190,7 @@ This dual policy is intentional: **pipe install proceeds**; **destructive uninst
 - **Intentional:** Mode globals + `prompt_*` ownership is documented and stable.  
 - **Anti-fragile:** Non-TTY and quiet/json paths always terminate without stdin.  
 - **Over-protect:** Do not “simplify” prompt guards or replace `prompt_yes_no` with ad-hoc `read`.  
-- **Pair with output SSOT:** Prompts use `msg_n` / `out_*`; JSON never shows prompts.  
+- **Pair with output SSOT:** Prompts use `out_msg_n` / `out_*`; JSON never shows prompts.  
 - **Pair with CLI interface:** Flag meanings stay aligned with `requirement-shell-cli-interface.md`.
 
 ---

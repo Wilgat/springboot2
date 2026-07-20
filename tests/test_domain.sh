@@ -116,7 +116,7 @@ run_test_domain() {
     )
     _ec=$?
     assert_eq "domain --json --no-run exit 0" 0 "$_ec"
-    assert_contains "domain --json --no-run type success" "$_out" '"type":"success"'
+    assert_contains "domain --json --no-run type success" "$_out" '"type":"out_success"'
     assert_contains "domain --json --no-run no_run true" "$_out" '"no_run":"true"'
     assert_contains "domain --json --no-run project_dir" "$_out" "project_dir"
 

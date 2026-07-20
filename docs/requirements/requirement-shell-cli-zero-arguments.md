@@ -6,7 +6,7 @@
 >
 > | Situation | Empty argv **MUST** mean |
 > |-----------|---------------------------|
-> | **Not installed** | **Type O install-ensure** (`maybe_install` / `perform_self_install`) — portable Cases A below |
+> | **Not installed** | **Type O install-ensure** (`inst_maybe_install` / `inst_perform_install`) — portable Cases A below |
 > | **Installed** (local or global) | **Domain default run** (`cmd=run`: SDKMAN/Java/Maven/project + `run_springboot_project`) — **not** install-ensure success no-op |
 >
 > Portable Type O text that says “already installed → install no-op only” is **superseded for installed empty argv** by this hybrid and by `requirement-springboot2-domain.md`. First-install / `curl \| bash` path remains install-ensure. **MUST NOT** dump help for installed bare `springboot2`.
@@ -49,13 +49,13 @@ Empty argv detect cases:
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.1.0` |
+| **VERSION** | `2.2.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
-| **Dispatcher** | `main_spring_boot_app` (not seed `app_main`) |
-| **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
-| **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
+| **Dispatcher** | `app_main` (A naming) |
+| **Output SSOT** | `out_text` / `out_json` / `out_json_error` (+ wrappers `out_info`/`out_success`/`out_warn`/`out_error`/`out_die`) |
+| **Install SSOT** | `inst_perform_install` / `inst_maybe_install` / `inst_is_installed` / `inst_get_version` |
 
 Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`) are **in addition** to Type 0 lifecycle.
 
@@ -67,26 +67,26 @@ Live scalars are owned by the ship unit Config block. Requirement **cores** stay
 |------|----------------------------|
 | **Type O** | Online-install empty-argv product type: empty argv = install-ensure (this product). |
 | **Type N** | Non-online-install empty-argv type: empty argv = help — **out of scope** for springboot2. |
-| **Empty argv / zero-arg** | `$# -eq 0` at entry to `main_spring_boot_app` (no command tokens; classic `curl \| sh` with no trailing args). |
+| **Empty argv / zero-arg** | `$# -eq 0` at entry to `app_main` (no command tokens; classic `curl \| sh` with no trailing args). |
 | **Install-ensure** | Converge to “managed `springboot2` binary present”; either perform install or success no-op. |
-| **Not installed** | `is_installed` returns false (`get_installed_version` → `not installed`). |
+| **Not installed** | `inst_is_installed` returns false (`inst_get_version` → `not installed`). |
 | **Installed (local)** | Executable at `${USER_BIN}/springboot2` (default `USER_BIN=${HOME}/.local/bin`) observed by install-detect SSOT. |
 | **Installed (global)** | Executable at `${GLOBAL_BIN}/springboot2` (default `GLOBAL_BIN=/usr/local/bin`) observed by install-detect SSOT. |
-| **Force / reinstall** | `FORCE_REINSTALL=1` from `--force` (and related force wiring in `main_spring_boot_app`). Required only for deliberate replace, not for ensure. |
+| **Force / reinstall** | `FORCE_REINSTALL=1` from `--force` (and related force wiring in `app_main`). Required only for deliberate replace, not for ensure. |
 
 ### 2.2 Single meaning of empty argv (hybrid)
 
-1. When **argv is empty** and the tool is **not installed**, `main_spring_boot_app` **MUST** run **install-ensure** — **MUST NOT** route to `show_spring_boot_help`.  
-2. When **argv is empty** and the tool is **installed**, `main_spring_boot_app` **MUST** run **domain default** (`cmd=run` / setup + optional `run_springboot_project`) — **MUST NOT** treat that path as install-ensure-only success no-op, and **MUST NOT** dump help. Full domain law: `requirement-springboot2-domain.md`.  
+1. When **argv is empty** and the tool is **not installed**, `app_main` **MUST** run **install-ensure** — **MUST NOT** route to `app_help`.  
+2. When **argv is empty** and the tool is **installed**, `app_main` **MUST** run **domain default** (`cmd=run` / setup + optional `run_springboot_project`) — **MUST NOT** treat that path as install-ensure-only success no-op, and **MUST NOT** dump help. Full domain law: `requirement-springboot2-domain.md`.  
 3. Explicit `springboot2 help` remains the only full-usage path for help text.  
-4. Bootstrap **MUST** always call `main_spring_boot_app "$@"` so pipe one-liners reach this contract (no `${0##*/}` product-name gate).  
+4. Bootstrap **MUST** always call `app_main "$@"` so pipe one-liners reach this contract (no `${0##*/}` product-name gate).  
 5. Empty argv **MUST NOT** require the user to pass `install` or `install --force` merely because a previous install already succeeded (installed re-runs go to domain, not “you must force install”).
 
 ### 2.3 Normative case matrix
 
 | Case | Detect condition (project) | Empty argv, force off (this product) | Empty argv / deliberate install force |
 |------|----------------------------|--------------------------------------|---------------------------------------|
-| **A. Not installed** | `is_installed` false | Install into privilege-correct path (§2.4) | Same first-time install |
+| **A. Not installed** | `inst_is_installed` false | Install into privilege-correct path (§2.4) | Same first-time install |
 | **B. Installed — local** | User binary present via detect SSOT | **Domain run** (hybrid supersession) — **no help**; **not** portable “install no-op only” | Explicit install/`self-update`/`--force` reinstall policy owns binary replace — not bare empty argv |
 | **C. Installed — global** | Global binary present via detect SSOT | **Domain run** (hybrid supersession) — **no help**; **not** portable “install no-op only” | Same as B for deliberate reinstall paths |
 
@@ -95,18 +95,18 @@ Live scalars are owned by the ship unit Config block. Requirement **cores** stay
 **Already-installed rules (Cases B and C, empty argv, force off) — hybrid:**
 
 1. **MUST NOT** dump full help.  
-2. **MUST** enter domain pipeline (default `run`) per live `main_spring_boot_app` and `requirement-springboot2-domain.md`.  
+2. **MUST** enter domain pipeline (default `run`) per live `app_main` and `requirement-springboot2-domain.md`.  
 3. Binary reinstall is **not** implied by empty argv alone; use `self-update` / force install policy when deliberate replace is needed.  
-4. Detect **MUST** treat either global or local managed binary as installed when that is how `is_installed` / `get_installed_version` resolve paths (project SSOT today prefers global when executable there, else user path).  
+4. Detect **MUST** treat either global or local managed binary as installed when that is how `inst_is_installed` / `inst_get_version` resolve paths (project SSOT today prefers global when executable there, else user path).  
 5. Exit status and messaging for domain run follow domain + output requirements (build/run may long-run / exec; `--no-run` may exit 0 after setup).
 
 ### 2.4 Case A — not installed (modes)
 
 | Mode | Required empty-argv behavior |
 |------|------------------------------|
-| **Interactive** (TTY stdin+stdout, not quiet/json) | `maybe_install`: note + `prompt_yes_no`; yes → `perform_self_install`; no → skip without help dump |
-| **Non-interactive** (non-TTY / `curl \| sh`) | Auto-install message + `perform_self_install` (via `maybe_install` non-TTY branch) |
-| **Quiet or JSON** | `perform_self_install` directly (no prompt) |
+| **Interactive** (TTY stdin+stdout, not quiet/json) | `inst_maybe_install`: note + `prompt_yes_no`; yes → `inst_perform_install`; no → skip without help dump |
+| **Non-interactive** (non-TTY / `curl \| sh`) | Auto-install message + `inst_perform_install` (via `inst_maybe_install` non-TTY branch) |
+| **Quiet or JSON** | `inst_perform_install` directly (no prompt) |
 | **Failure** (network, checksum, I/O) | Non-zero exit; no fake success; no help-only output |
 
 **Placement privilege:**
@@ -134,7 +134,7 @@ Live scalars are owned by the ship unit Config block. Requirement **cores** stay
 4. Require `--force` solely because detect says installed (for normal re-run / domain use).  
 5. Blind re-download every empty-argv run without force.  
 6. Basename-gate main so `curl \| sh` never hits the empty-argv / auto-install branch.  
-7. Detect only one of global/local incorrectly so a present local install is treated as Case A (or the reverse) contrary to `is_installed` family SSOT.
+7. Detect only one of global/local incorrectly so a present local install is treated as Case A (or the reverse) contrary to `inst_is_installed` family SSOT.
 
 ### 2.7 Implementation Notes (this project)
 
@@ -143,29 +143,29 @@ Live scalars are owned by the ship unit Config block. Requirement **cores** stay
 | **Empty-argv type** | **Type O — Online-install** (install-ensure; not Type N help-default) |
 | **Product / binary** | `springboot2` (`APP_NAME`) |
 | **Ship unit** | Repo root `./springboot2` |
-| **Dispatcher** | `main_spring_boot_app` — empty-argv block **before** flag/command parse default help |
-| **Install ensure** | `perform_self_install` (quiet/json and already-installed no-op) |
-| **Friendly first install** | `maybe_install` (TTY confirm / non-TTY auto) when not installed and not quiet/json |
-| **Detect SSOT** | `is_installed` ← `get_installed_version` |
+| **Dispatcher** | `app_main` — empty-argv block **before** flag/command parse default help |
+| **Install ensure** | `inst_perform_install` (quiet/json and already-installed no-op) |
+| **Friendly first install** | `inst_maybe_install` (TTY confirm / non-TTY auto) when not installed and not quiet/json |
+| **Detect SSOT** | `inst_is_installed` ← `inst_get_version` |
 | **Global path** | `GLOBAL_BIN` default `/usr/local/bin` |
 | **Local path** | `USER_BIN` default `${HOME}/.local/bin` |
-| **Force wiring** | `--force` → `FORCE=1` and `FORCE_REINSTALL=1` in `main_spring_boot_app` |
-| **Output SSOT** | `success` / `info` / `output_json` / errors via `output_*` |
+| **Force wiring** | `--force` → `FORCE=1` and `FORCE_REINSTALL=1` in `app_main` |
+| **Output SSOT** | `out_success` / `out_info` / `out_json` / errors via `out_*` |
 | **Channel** | `SCRIPT_URL` (compose from `REPO_USER` / `REPO_NAME` / `APP_NAME`) for download path inside install |
 | **Tests** | `tests/test_cli.sh` (Case A failure when not installed); `tests/test_install_lifecycle.sh` (Case B local + Case C global already-installed → not help) |
 
 #### Dispatcher algorithm (normative sketch)
 
 ```text
-main_spring_boot_app:
+app_main:
   if [ $# -eq 0 ]; then
     if JSON or QUIET:
-      perform_self_install; exit $?
-    elif is_installed:
-      perform_self_install   # Case B/C success no-op
+      inst_perform_install; exit $?
+    elif inst_is_installed:
+      inst_perform_install   # Case B/C success no-op
       exit $?
     else
-      maybe_install     # Case A
+      inst_maybe_install     # Case A
       exit $?
     fi
   fi
@@ -174,16 +174,16 @@ main_spring_boot_app:
 
 #### Message contract (already installed, human)
 
-- Success: `${APP_NAME} is already installed.` (or equivalent via `success`)  
+- Success: `${APP_NAME} is already installed.` (or equivalent via `out_success`)  
 - Optional info: force / `self-update` only for deliberate reinstall or upgrade  
-- **MUST NOT** print the full `show_spring_boot_help` usage body on this path
+- **MUST NOT** print the full `app_help` usage body on this path
 
 ### 2.8 Why This Requirement Exists (Direct CIAO Alignment)
 
 - **CIAO Principle 1 – Caution** (https://github.com/cloudgen/ciao): One-liner re-runs must not look like broken install or force unnecessary reinstall.  
 - **CIAO Principle 2 – Intentional** (https://github.com/cloudgen/ciao): Empty argv has one meaning for not-installed, local, and global.  
 - **CIAO Principle 3 – Anti-fragile** (https://github.com/cloudgen/ciao): Dual install paths + `curl \| sh` + TTY.  
-- **CIAO Principle 5 – Single point of entry** (https://github.com/cloudgen/ciao): `main_spring_boot_app` owns empty-argv before help default.  
+- **CIAO Principle 5 – Single point of entry** (https://github.com/cloudgen/ciao): `app_main` owns empty-argv before help default.  
 - **CIAO Principle 14 – Interactive vs non-interactive** (https://github.com/cloudgen/ciao): Case A auto under pipe; optional TTY confirm.  
 - **CIAO Principle 18 – Over-protect** (https://github.com/cloudgen/ciao): Protection Rule against help-fallback regression.
 
@@ -195,7 +195,7 @@ main_spring_boot_app:
 - **Intentional:** Help is never the empty-argv default for this install CLI.  
 - **Anti-fragile:** Global and local detect; idempotent second one-liner.  
 - **Over-protect:** Do not “simplify” empty-argv back to `COMMAND:=help` after first install.  
-- **SSOT:** `is_installed` / `perform_self_install` / `maybe_install` / `output_*`.  
+- **SSOT:** `inst_is_installed` / `inst_perform_install` / `inst_maybe_install` / `out_*`.  
 - **Idempotent ensure:** Case B/C force off → already installed, exit 0.
 
 ---
@@ -204,14 +204,14 @@ main_spring_boot_app:
 
 **Future AI assistants, Grok, or maintainers MUST NOT**:
 
-1. Route empty argv to `show_spring_boot_help` when Case B or C applies (or when Case A should install).  
+1. Route empty argv to `app_help` when Case B or C applies (or when Case A should install).  
 2. Require `--force` for a healthy already-installed empty-argv re-run (local or global).  
 3. Handle only Case A and leave B/C as accidental help fallthrough.  
 4. Break dual-path detect so local or global installs are misclassified.  
 5. Blindly reinstall on every empty-argv run without `FORCE_REINSTALL`.  
 6. Exit 0 with no install and no already-installed acknowledgment when detect says installed.  
-7. Reintroduce a basename-only gate that skips `main_spring_boot_app` under `curl \| sh`.  
-8. Bypass `output_*` for empty-argv user messages.  
+7. Reintroduce a basename-only gate that skips `app_main` under `curl \| sh`.  
+8. Bypass `out_*` for empty-argv user messages.  
 9. Contradict this file in peer requirements by documenting “already installed → help” as normative empty-argv behavior.
 
 **Violating this rule is a critical zero-arg / online-install regression.**
@@ -241,10 +241,10 @@ This requirement is satisfied when all of the following hold:
 | `docs/requirements/requirement-shell-idempotency.md` | Ensure re-run / force boundary |
 | `docs/requirements/requirement-shell-interactive-vs-noninteractive.md` | TTY vs pipe for Case A |
 | `docs/requirements/requirement-shell-self-management.md` | self-update / uninstall (not empty-argv default) |
-| `docs/requirements/requirement-shell-output-requirements.md` | output_* / JSON purity |
+| `docs/requirements/requirement-shell-output-requirements.md` | `out_*` / JSON purity |
 | `docs/requirements/requirement-shell-automatic-checksum.md` | Integrity on install download path |
 | `docs/requirements/requirement-springboot2-domain.md` | Domain pipeline for installed empty argv / `run` |
-| Repo root `./springboot2` | Implementation (`main_spring_boot_app`, `perform_self_install`/`is_installed` family) |
+| Repo root `./springboot2` | Implementation (`app_main`, `inst_perform_install`/`inst_is_installed` family) |
 | `tests/test_cli.sh`, `tests/test_install_lifecycle.sh` | Regression coverage (may be phantom until real tests exist) |
 
 ---
@@ -264,7 +264,7 @@ Normative summary lives in the **Hybrid supersession** banner at the top of this
 
 | Situation | Required behavior for **this** product |
 |-----------|----------------------------------------|
-| **Not installed** + empty argv | Install-ensure (`maybe_install` / `perform_self_install`) |
+| **Not installed** + empty argv | Install-ensure (`inst_maybe_install` / `inst_perform_install`) |
 | **Installed** + empty argv | **Domain default `cmd=run`**: SDKMAN/Java/Maven/project setup + `run_springboot_project` (not install no-op) — `requirement-springboot2-domain.md` |
 | **Installed** + explicit lifecycle cmds | `version`, `version-check`, `self-update`, `self-uninstall`, `about`, `help` as dispatched |
 | **Flags** | `--project-dir`, `--no-run`, `--force`, `--force-user`, `--force-root`, `--json`, `--quiet` |

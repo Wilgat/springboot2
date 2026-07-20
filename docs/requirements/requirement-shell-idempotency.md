@@ -21,13 +21,13 @@ It defines re-run safety for ensure-style shell lifecycle commands (install, PAT
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.1.0` |
+| **VERSION** | `2.2.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
-| **Dispatcher** | `main_spring_boot_app` (not seed `app_main`) |
-| **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
-| **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
+| **Dispatcher** | `app_main` (A naming) |
+| **Output SSOT** | `out_text` / `out_json` / `out_json_error` (+ wrappers `out_info`/`out_success`/`out_warn`/`out_error`/`out_die`) |
+| **Install SSOT** | `inst_perform_install` / `inst_maybe_install` / `inst_is_installed` / `inst_get_version` |
 
 Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`) are **in addition** to Type 0 lifecycle.
 
@@ -63,7 +63,7 @@ When the desired state is already true:
 | **Success** | Treat as success (CLI exit 0) |
 | **Communicate** | State the current condition in non-quiet human mode |
 | **Minimize work** | No unnecessary download, rewrite, or PATH append |
-| **Output SSOT** | Use central `out_*` / `output_json`; respect quiet/json |
+| **Output SSOT** | Use central `out_*` / `out_json`; respect quiet/json |
 
 Illegal inputs, missing remote channel when required, checksum failure, and permission errors **MUST** still fail closed. Idempotency does **not** mean “never error.”
 
@@ -83,8 +83,8 @@ Force **MUST NOT** be used as a silent way to skip integrity verification.
 |------|------------------------|
 | **Product / binary** | `springboot2` (`APP_NAME`) |
 | **Implementation file** | Repo root `./springboot2` |
-| **Install detect SSOT** | `is_installed` / `get_installed_version` |
-| **Install ensure SSOT** | `perform_self_install` (+ download/atomic helpers) |
+| **Install detect SSOT** | `inst_is_installed` / `inst_get_version` |
+| **Install ensure SSOT** | `inst_perform_install` (+ download/atomic helpers) |
 | **Force reinstall var** | `FORCE_REINSTALL` (default `0`); CLI `--force` must set this per `requirement-shell-cli-interface.md` |
 | **Remote channel** | `SCRIPT_URL` (required for version-check / self-update network steps) |
 | **User PATH integration** | `path_add_*` / `path_add_shell` — append only if marker/line absent |
@@ -96,7 +96,7 @@ Force **MUST NOT** be used as a silent way to skip integrity verification.
 |----------------|---------------|--------------------------|-----------------|
 | `install` | Binary present at privilege-correct path | **Success no-op**; human: already installed; JSON success | `FORCE_REINSTALL=1` re-downloads/replaces |
 | Zero-arg install-ensure (**Type O**) | Binary present (local or global) | Second zero-arg when installed: **success no-op** “already installed” (not help, not reinstall) without force | Same force rules as install; see `requirement-shell-cli-zero-arguments.md` |
-| `maybe_install` | Installed or user declined | Already installed → return success without re-prompt storm | — |
+| `inst_maybe_install` | Installed or user declined | Already installed → return success without re-prompt storm | — |
 | `self-update` | Local version equals remote (or newer under project policy) | **Success no-op** “already latest” when versions equal and force off | When versions differ, reinstall via install path; force may force reinstall; **must not silent-downgrade** without explicit force policy (see self-management term) |
 | `self-uninstall` | Binary absent | **Success no-op** “not installed / nothing to uninstall” | Force may skip interactive confirm only; still no over-delete |
 | `version-check` | N/A (read/compare) | Safe to re-run; network fetch each time is allowed; must not mutate install state | — |
@@ -106,7 +106,7 @@ Force **MUST NOT** be used as a silent way to skip integrity verification.
 
 #### Concrete detect → act expectations (this project)
 
-1. **Install:** If `is_installed` and `FORCE_REINSTALL=0` → return 0 without download/move.  
+1. **Install:** If `inst_is_installed` and `FORCE_REINSTALL=0` → return 0 without download/move.  
 2. **Self-update:** Fetch remote `VERSION` from `SCRIPT_URL`; if equal to local and force off → return 0 without reinstall; if remote unreadable → fail loud (not a silent “already ok”).  
 3. **Self-uninstall:** If no managed binary path resolved → return 0 (not installed).  
 4. **PATH ensure:** Grep/marker check before append; already present is success for the ensure intent.  
@@ -135,8 +135,8 @@ Force **MUST NOT** be used as a silent way to skip integrity verification.
 - **Caution:** Prefer detect-before-create; fail closed on integrity and network when action is required.  
 - **Intentional:** Separate already-done success from forced reinstall and from real failure.  
 - **Anti-fragile:** Re-run after success is safe; re-run after partial failure converges or errors clearly.  
-- **Over-protect:** Do not remove `is_installed` early-exit, PATH duplicate guards, or empty-dir PATH cleanup safety.  
-- **SSOT:** Installation detect via `is_installed` / `get_installed_version`; output via Output SSOT.  
+- **Over-protect:** Do not remove `inst_is_installed` early-exit, PATH duplicate guards, or empty-dir PATH cleanup safety.  
+- **SSOT:** Installation detect via `inst_is_installed` / `inst_get_version`; output via Output SSOT.  
 - **Output modes:** No-op success still honors quiet/json (structured success in JSON when the command supports it).  
 - **Respect old working logic:** Preserve battle-tested ensure guards; surgical fixes only when proven bugs.
 

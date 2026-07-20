@@ -19,13 +19,13 @@ It defines a **Type 0–centric self-managed shell CLI** (install / update / uni
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.1.0` |
+| **VERSION** | `2.2.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
-| **Dispatcher** | `main_spring_boot_app` (not seed `app_main`) |
-| **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
-| **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
+| **Dispatcher** | `app_main` (A naming) |
+| **Output SSOT** | `out_text` / `out_json` / `out_json_error` (+ wrappers `out_info`/`out_success`/`out_warn`/`out_error`/`out_die`) |
+| **Install SSOT** | `inst_perform_install` / `inst_maybe_install` / `inst_is_installed` / `inst_get_version` |
 
 Live scalars are owned by the ship unit Config block. Requirement **cores** stay portable; **Implementation Notes** must match the table above. On conflict with Config, use product identity protocol (ask; do not invent dual owners). Domain Spring Boot ops (`setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`) are **in addition** to Type 0 lifecycle.
 
@@ -62,7 +62,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 
 ### 2.3 Dispatcher and entry rules (portable)
 
-1. **Single entry:** A single main dispatcher (e.g. `main_spring_boot_app`) **MUST** parse global flags and route commands.
+1. **Single entry:** A single main dispatcher (e.g. `app_main`) **MUST** parse global flags and route commands.
 2. **Unknown command:** **MUST** fail loudly with a clear error and pointer to `help` (via output SSOT).
 3. **Zero-arg hybrid (this product):** Empty argv **MUST NOT** dump help. **Not installed** → install-ensure; **installed** → domain default run (not pure install no-op). Full contract: `requirement-shell-cli-zero-arguments.md` hybrid supersession + `requirement-springboot2-domain.md`.
 4. **Idempotent install skip:** Install **MUST** no-op when already installed unless force/reinstall policy is set.
@@ -74,7 +74,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 |------|----------|
 | Human (default TTY) | Prefixed messages via Output SSOT; colors only when TTY and not quiet/json |
 | Quiet | Suppress info/success/plain noise; still show errors / fatal |
-| JSON | Force quiet; emit structured JSON via `output_json` / `output_json_error`; no mixed human lines on success path |
+| JSON | Force quiet; emit structured JSON via `out_json` / `out_json_error`; no mixed human lines on success path |
 | Non-interactive | Never hang on prompts; use safe defaults or `--force`/env policy |
 
 Destructive Type 0 actions (e.g. uninstall) **MUST** confirm when interactive unless force policy is set; non-interactive **MUST NOT** block on stdin.
@@ -96,9 +96,9 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 |------|------------------------|
 | **Product / binary name** | `springboot2` (`APP_NAME`, default `springboot2`) |
 | **Primary executable** | Repo root `./springboot2` (bash `#!/bin/bash`, single-file for `curl \| sh`) |
-| **Dispatcher** | `main_spring_boot_app` (always invoked at end of script: `main_spring_boot_app "$@"` — no `${0##*/}` / APP_NAME basename gate; required for `curl \| sh`) |
-| **Output SSOT** | `output_text` + wrappers (`info`, `success`, `warn`, `error`, `die`, `plain`, `output_json`, …) |
-| **Version SSOT** | `VERSION` default `2.1.0` (script header / config block: `VERSION="2.1.0"`) |
+| **Dispatcher** | `app_main` (always invoked at end of script: `app_main "$@"` — no `${0##*/}` / APP_NAME basename gate; required for `curl \| sh`) |
+| **Output SSOT** | `out_text` + wrappers (`out_info`, `out_success`, `out_warn`, `out_error`, `out_die`, `out_plain`, `out_json`, …) |
+| **Version SSOT** | `VERSION` default `2.2.0` (script header / config block: `VERSION="2.2.0"`) |
 | **Install paths** | Global: `GLOBAL_BIN` default `/usr/local/bin`; User: `USER_BIN` default `${HOME}/.local/bin` |
 | **Remote channel env (help surface)** | `REPO_USER` / `REPO_NAME` (defaults `Wilgat` / `springboot2`); `SCRIPT_URL` composed default `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}` (literal product default: `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2`; override via env). **`help` / `about` MUST list these operator channel vars as designed — MUST NOT list `CHECKSUM`** (install-path runtime pin only; see `requirement-shell-automatic-checksum.md`) |
 | **Type 1 / Type 2 commands** | **None** on current surface — this tool is CLI lifecycle only |
@@ -110,33 +110,33 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 |---------|------|-------------------|-------------------|
 | *(no args — empty argv)* | Type 0 / domain | Hybrid: **not installed** → install-ensure; **installed** → domain default `run` — never help; see `requirement-shell-cli-zero-arguments.md` hybrid supersession |
 | `install` | Type 0 | *(no separate case)* | First install via empty argv auto-install only (not a routed subcommand) |
-| `version` | Type 0 | version dispatch in `main_spring_boot_app` | Print local version; JSON object when `--json` |
-| `about` | Type 0 | `show_about_spring_boot_app` | Diagnostics incl. domain fields; JSON when `--json`; **no `CHECKSUM` field** |
-| `status` | Type 0 / domain | `show_about_spring_boot_app` (alias) | Same diagnostics surface as about |
-| `version-check` | Type 0 | `version_check` | Compare local vs remote `VERSION` from `SCRIPT_URL` |
-| `self-update` | Type 0 | `self_update` | Fetch remote version; reinstall when policy allows; reuse install primitives |
-| `self-uninstall` | Type 0 | `self_uninstall` | Remove managed binary; confirm_required without force |
-| `reinstall` | Type 0 / domain | `FORCE_REINSTALL=1` + `perform_self_install` then domain pipeline | Force CLI reinstall then continue domain (often with `--no-run` in automation) |
+| `version` | Type 0 | version dispatch in `app_main` | Print local version; JSON object when `--json` |
+| `about` | Type 0 | `app_about` | Diagnostics incl. domain fields; JSON when `--json`; **no `CHECKSUM` field** |
+| `status` | Type 0 / domain | `app_about` (alias) | Same diagnostics surface as about |
+| `version-check` | Type 0 | `ver_check` | Compare local vs remote `VERSION` from `SCRIPT_URL` |
+| `self-update` | Type 0 | `inst_self_update` | Fetch remote version; reinstall when policy allows; reuse install primitives |
+| `self-uninstall` | Type 0 | `inst_self_uninstall` | Remove managed binary; confirm_required without force |
+| `reinstall` | Type 0 / domain | `FORCE_REINSTALL=1` + `inst_perform_install` then domain pipeline | Force CLI reinstall then continue domain (often with `--no-run` in automation) |
 | `run` | domain | domain pipeline | Explicit domain setup/run |
-| `help` | Type 0 | `show_spring_boot_help` | Full usage; domain flags + Type 0; **not** `CHECKSUM` |
+| `help` | Type 0 | `app_help` | Full usage; domain flags + Type 0; **not** `CHECKSUM` |
 
 #### Global flags (normative wiring for this project)
 
 | Flag | Required wiring |
 |------|-----------------|
-| `--quiet`, `-q` | Set `QUIET=1` in `main_spring_boot_app` |
-| `--json` | Set `JSON=1` and `QUIET=1` in `main_spring_boot_app` |
-| `--debug` | Set `DEBUG=1` in `main_spring_boot_app` |
-| `--force` | Parsed by `main_spring_boot_app` → `FORCE=1` and `FORCE_REINSTALL=1`; uninstall, project regenerate, self-update force paths |
+| `--quiet`, `-q` | Set `QUIET=1` in `app_main` |
+| `--json` | Set `JSON=1` and `QUIET=1` in `app_main` |
+| `--debug` | Set `DEBUG=1` in `app_main` |
+| `--force` | Parsed by `app_main` → `FORCE=1` and `FORCE_REINSTALL=1`; uninstall, project regenerate, self-update force paths |
 | `--reset` | Sets `FORCE_REINSTALL=1` (and `RESET_PROJECT=1`); domain project wipe/regenerate |
 | `--project-dir`, `--no-run` | Domain flags — `requirement-springboot2-domain.md` |
 | `--force-user`, `--force-root` | Privilege force flags as wired |
 
 #### Dispatcher acceptance criteria (this project)
 
-1. Unknown token after flag parse → `die` with pointer to `springboot2 help`.  
+1. Unknown token after flag parse → `out_die` with pointer to `springboot2 help`.  
 2. Empty argv **hybrid** (not Type N help): not installed → install-ensure; installed → domain run — see zero-arguments specialization.  
-3. Command routing table in `main_spring_boot_app` **must** include every supported command row above (except intentional non-command empty-argv install).  
+3. Command routing table in `app_main` **must** include every supported command row above (except intentional non-command empty-argv install).  
 4. Help text **must** stay aligned with routed commands/flags (no orphan listings).  
 5. User-facing strings **must not** use raw `echo`/`printf` outside Output SSOT.
 
@@ -151,8 +151,8 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 - **CIAO Principle 1 – Caution** (https://github.com/cloudgen/ciao): Unknown commands fail loud; force and prompts gate destructive ops; quiet/json never hide fatal errors incorrectly.  
 - **CIAO Principle 2 – Intentional** (https://github.com/cloudgen/ciao): Every command has one privilege type, one handler, and documented flags.  
 - **CIAO Principle 3 – Anti-fragile** (https://github.com/cloudgen/ciao): Works under TTY, `curl | sh`, quiet, and JSON; root vs user install paths.  
-- **CIAO Principle 4 / 12 – Single source of output & security/traceability** (https://github.com/cloudgen/ciao): Central Output SSOT (`output_*`); JSON/human separation.  
-- **CIAO Principle 5 – Single point of entry** (https://github.com/cloudgen/ciao): `main_spring_boot_app` is the dispatcher SSOT.  
+- **CIAO Principle 4 / 12 – Single source of output & security/traceability** (https://github.com/cloudgen/ciao): Central Output SSOT (`out_*`); JSON/human separation.  
+- **CIAO Principle 5 – Single point of entry** (https://github.com/cloudgen/ciao): `app_main` is the dispatcher SSOT.  
 - **CIAO Principle 8 – Least-privilege user** (https://github.com/cloudgen/ciao): Type 0 default for CLI self-care; no invented system-user requirement for binary lifecycle.  
 - **CIAO Principle 14 – Interactive vs non-interactive** (https://github.com/cloudgen/ciao): No hang in non-interactive; prompts only when appropriate.  
 - **CIAO Principle 18 – Over-protect** (https://github.com/cloudgen/ciao): Protection Rule below blocks privilege and UX regressions.
@@ -165,7 +165,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 - **Intentional:** Command table + help + dispatcher stay synchronized.  
 - **Anti-fragile:** Per-user and global install; network/remote optional until `SCRIPT_URL` set.  
 - **Over-protect:** Do not collapse Type 0/1/2, remove JSON quiet contract, or reintroduce raw output for user messages.  
-- **SSOT:** `APP_NAME` / `VERSION` / flags at config defaults; output via Output SSOT; dispatch via `main_spring_boot_app`.  
+- **SSOT:** `APP_NAME` / `VERSION` / flags at config defaults; output via Output SSOT; dispatch via `app_main`.  
 - **Idempotency:** Already-installed install path is a no-op unless force reinstall.  
 - **Respect old working logic:** Surgical changes only; preserve Protection Zones and battle-tested install/self-management helpers unless explicitly redesigning.
 
@@ -212,7 +212,7 @@ This requirement is satisfied for the springboot2 shell CLI when all of the foll
 | `docs/requirements/requirement-shell-cli-zero-arguments.md` | Empty argv hybrid (install when absent; domain when installed) |
 | `docs/requirements/requirement-springboot2-domain.md` | Domain commands/flags / pipeline |
 | `docs/requirements/requirement-shell-idempotency.md` | Re-run safety for ensure ops |
-| `docs/requirements/requirement-shell-modular-function-design.md` | Live function families (`output_*`, lifecycle, util, domain) |
+| `docs/requirements/requirement-shell-modular-function-design.md` | Live function families (`out_*`, lifecycle, util, domain) |
 | `docs/requirements/index.md` | Registry SSOT |
 | `./springboot2` | Implementation under test |
 
@@ -226,17 +226,17 @@ This requirement is satisfied for the springboot2 shell CLI when all of the foll
 **Empty argv (this product):** See `requirement-shell-cli-zero-arguments.md` § Empty argv specialization — installed empty argv is **domain run**, not install-ensure no-op.
 
 
-### Live function inventory (ship unit — not seed prefixes)
+### Live function inventory (ship unit — A naming)
 
-**Product law inventory** (live `./springboot2` — §3.1 option 2; not seed `out_*`/`inst_*`/`app_*`):
+**Product law inventory** (live `./springboot2` — §3.1 option 1 (A naming); live `out_*`/`inst_*`/`app_*` (A naming)):
 
 | Area | Live names |
 |------|------------|
-| Output | `output_text`, `output_json`, `output_json_error`, `info`, `success`, `warn`, `error`, `die`, `plain`, `msg`, `msg_n` |
-| Install / lifecycle | `perform_self_install`, `maybe_install`, `is_installed`, `get_installed_version`, `get_install_bin_path`, `self_update`, `self_uninstall`, `version_check`, `version_gt` |
-| Dispatch | `main_spring_boot_app`, `show_spring_boot_help`, `show_about_spring_boot_app` |
+| Output | `out_text`, `out_json`, `out_json_error`, `out_info`, `out_success`, `out_warn`, `out_error`, `out_die`, `out_plain`, `out_plain`, `out_msg_n` |
+| Install / lifecycle | `inst_perform_install`, `inst_maybe_install`, `inst_is_installed`, `inst_get_version`, `util_get_install_bin_path`, `inst_self_update`, `inst_self_uninstall`, `ver_check`, `ver_gt` |
+| Dispatch | `app_main`, `app_help`, `app_about` |
 | Domain | `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project`, `check_alpine_requirements` |
-| PATH | `add_to_shell_path`, `in_path`, per-shell helpers as present |
+| PATH | `path_add_shell`, `path_in_path`, per-shell helpers as present |
 
 Compliance claiming seed-prefix inventory as Implemented is **false** until rename or notes mark **target vs live**.
 

@@ -18,13 +18,13 @@ It owns product ops so agents do not treat shell lifecycle files alone as full-p
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.1.0` |
+| **VERSION** | `2.2.0` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
-| **Dispatcher** | `main_spring_boot_app` (not seed `app_main`) |
-| **Output SSOT** | `output_text` / `output_json` / `output_json_error` (+ wrappers `info`/`success`/`warn`/`error`/`die`) |
-| **Install SSOT** | `perform_self_install` / `maybe_install` / `is_installed` / `get_installed_version` |
+| **Dispatcher** | `app_main` (A naming) |
+| **Output SSOT** | `out_text` / `out_json` / `out_json_error` (+ wrappers `out_info`/`out_success`/`out_warn`/`out_error`/`out_die`) |
+| **Install SSOT** | `inst_perform_install` / `inst_maybe_install` / `inst_is_installed` / `inst_get_version` |
 | **Domain helpers** | `check_alpine_requirements`, `setup_sdkman`, `setup_java`, `setup_maven`, `setup_springboot_project`, `run_springboot_project` |
 
 Live scalars and pins are owned by the ship unit Config block. On conflict with Config, use product identity protocol (ask; do not invent dual owners). **Do not** retarget this product to another Spring Boot line (3.x / 4.x) without an explicit product decision — this ship unit is intentionally pinned to **2.7.18**.
@@ -47,7 +47,7 @@ Agents **MUST NOT** “modernize” Boot/Java pins as a casual cleanup. Header c
 
 ### 2.2 Domain ensure pipeline (order)
 
-When domain default run applies (installed empty argv, explicit `run`, or equivalent fallthrough after Type 0 commands exit), `main_spring_boot_app` **MUST** execute in order:
+When domain default run applies (installed empty argv, explicit `run`, or equivalent fallthrough after Type 0 commands exit), `app_main` **MUST** execute in order:
 
 1. `check_alpine_requirements` — Alpine + bash availability for SDKMAN  
 2. `setup_sdkman` — install or reuse SDKMAN  
@@ -56,7 +56,7 @@ When domain default run applies (installed empty argv, explicit `run`, or equiva
 5. `setup_springboot_project` — create or preserve demo project under `PROJECT_DIR`  
 6. Unless `--no-run` / `NO_RUN=1`: `run_springboot_project` (`mvn clean package -DskipTests` then `java -jar` of expected artifact)
 
-Failures **MUST** exit non-zero via output SSOT (`die` / `error`); **MUST NOT** fake success.
+Failures **MUST** exit non-zero via output SSOT (`out_die` / `out_error`); **MUST NOT** fake success.
 
 ### 2.3 Project preserve vs reset
 
@@ -75,13 +75,13 @@ Live code keys full project wipe/regenerate on `FORCE_REINSTALL` from `--force` 
 |---------|----------|
 | **Default cmd** | `cmd=run` when no Type 0 command token is given |
 | **Empty argv when installed** | Domain run pipeline (§2.2) — **not** Type 0 install no-op; see `requirement-shell-cli-zero-arguments.md` hybrid supersession |
-| **Empty argv when not installed** | Install-ensure first (`maybe_install` / `perform_self_install`); domain run is not the first-install contract |
+| **Empty argv when not installed** | Install-ensure first (`inst_maybe_install` / `inst_perform_install`); domain run is not the first-install contract |
 | `--project-dir <path>` | Set `PROJECT_DIR`; required path argument or fail loud |
 | `--no-run` | Complete env + project setup; skip `run_springboot_project`; success message / JSON with `no_run` |
 | `--force` / force-user / force-root | Privilege and reinstall policy; project regenerate when wired to `FORCE_REINSTALL` |
 | `--quiet` / `-q`, `--json` | Same mode contract as shell output requirements; domain messages go through output SSOT |
 | `run` | Explicit domain pipeline (same as default) |
-| `status` | **Implemented** — routes to `show_about_spring_boot_app` |
+| `status` | **Implemented** — routes to `app_about` |
 | `reinstall` | **Implemented** — force CLI reinstall then domain pipeline |
 | `--reset` | **Implemented** — force project regenerate via `FORCE_REINSTALL` |
 | Type 0 cmds | `version`, `version-check`, `self-update`, `self-uninstall`, `about`, `help` exit before domain pipeline |
@@ -94,7 +94,7 @@ Live code keys full project wipe/regenerate on `FORCE_REINSTALL` from `--force` 
 
 ### 2.6 Help ↔ dispatcher (domain)
 
-1. Every domain command/flag advertised in `show_spring_boot_help` **MUST** be parsed/routed in `main_spring_boot_app` (or help must drop the row).  
+1. Every domain command/flag advertised in `app_help` **MUST** be parsed/routed in `app_main` (or help must drop the row).  
 2. Help **MUST** state Spring Boot pin and purpose (quick setup & runner for this line).  
 3. JSON help **MUST NOT** dump long human text (shell output / CLI interface rules apply).
 
@@ -102,12 +102,12 @@ Live code keys full project wipe/regenerate on `FORCE_REINSTALL` from `--force` 
 
 | Item | Live value |
 |------|------------|
-| Domain entry | Default `cmd="run"` in `main_spring_boot_app` after Type 0 cases |
-| Auto-install gate | `if ! is_installed && [ $# -eq 0 ]` then install helpers — **not** when already installed |
+| Domain entry | Default `cmd="run"` in `app_main` after Type 0 cases |
+| Auto-install gate | `if ! inst_is_installed && [ $# -eq 0 ]` then install helpers — **not** when already installed |
 | Domain chain | `check_alpine_requirements` → `setup_sdkman` → `setup_java` → `setup_maven` → `setup_springboot_project` → optional `run_springboot_project` |
-| Project write | `write_file_atomic` for demo files |
+| Project write | `util_write_file_atomic` for demo files |
 | Run | `exec java -jar "target/${JAR_NAME}"` after successful package |
-| About extras | Domain-rich diagnostics (SDKMAN, project dir, port) via `show_about_spring_boot_app` |
+| About extras | Domain-rich diagnostics (SDKMAN, project dir, port) via `app_about` |
 
 #### Compliance notes (implementation status) — re-read disk 2026-07-15
 

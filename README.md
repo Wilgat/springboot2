@@ -1,6 +1,6 @@
 # springboot2
 
-[![Version](https://img.shields.io/badge/Version-2.1.0-blue?style=flat-square)](https://github.com/cloudgen/grokrec)
+[![Version](https://img.shields.io/badge/Version-2.2.0-blue?style=flat-square)](https://github.com/cloudgen/grokrec)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![CIAO](https://img.shields.io/badge/Philosophy-CIAO%20(Caution%20%E2%80%A2%20Intentional%20%E2%80%A2%20Anti--fragile%20%E2%80%A2%20Over--engineered)-purple.svg)](https://github.com/cloudgen/ciao)
 [![Made with CIAO](https://img.shields.io/badge/Made%20with%20❤️-CIAO-00AEEF?style=flat-square)](https://github.com/cloudgen/ciao)
@@ -204,7 +204,7 @@ MIT
 ---
 
 **Part of the Wilgat defensive tool family.**  
-*Last updated: 2026-07-15 · version **2.1.0***
+*Last updated: 2026-07-15 · version **2.2.0***
 
 ---
 
