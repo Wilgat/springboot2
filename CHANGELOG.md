@@ -8,7 +8,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) 
 
 ## [Unreleased]
 
-*(Nothing yet — next work goes here.)*
+### Changed
+- **Requirements:** design-time verification tables (TP families) on all shell + domain product-law files; suite pointers use public `tests/` only.
+- **Tests:** TP-labeled cases across CLI, install lifecycle, and domain suites; silent-failure guard; new optional online/local curl pipe suite (`test_online_curl_install.sh`, `TP-CURL-*`).
+
+### Notes
+- Product **VERSION** remains **2.3.1** (ship unit unchanged).
 
 ---
 

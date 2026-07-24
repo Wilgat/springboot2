@@ -13,7 +13,6 @@ It defines interactive vs non-interactive behavior for this shell project (globa
 
 ---
 
-
 ### Identity SSOT (this product — do not diverge)
 
 | Field | Live value (ship unit `./springboot2`) |
@@ -219,11 +218,12 @@ Mode-related work for springboot2 is **not done** if any of the following fail:
 
 1. No code path blocks on `read` under `--json`, `--quiet`, or non-TTY (except documented `INTERACTIVE=1` value prompt).  
 2. Destructive uninstall without `--force` does not silently proceed in non-interactive mode.  
-3. Zero-arg install-ensure supports automation (`curl | sh` / quiet/json): not-installed installs; already-installed (local or global) success no-op without help (`requirement-shell-cli-zero-arguments.md`).  
+3. Zero-arg install-ensure supports automation (`curl | bash` / quiet/json): not-installed installs; already-installed continues payload ensure without help (`requirement-shell-cli-zero-arguments.md` Type O-P).  
 4. All confirms go through `prompt_yes_no`.  
 5. Colors only when TTY and not quiet/json.  
 6. JSON/human contracts remain aligned with `requirement-shell-output-requirements.md`.  
-7. Changes cite `requirement-shell-interactive-vs-noninteractive`.
+7. Pipe / non-TTY one-liner failures and successes are **loud** (not 0-byte silent) — proven by TP-CURL in `tests/test_online_curl_install.sh`.  
+8. Changes cite `requirement-shell-interactive-vs-noninteractive`.
 
 ---
 
@@ -236,14 +236,26 @@ Mode-related work for springboot2 is **not done** if any of the following fail:
 | `docs/requirements/requirement-shell-output-requirements.md` | quiet/json/debug output contracts |
 | `docs/requirements/requirement-shell-self-management.md` | Uninstall confirm / force policy |
 | `docs/requirements/requirement-shell-idempotency.md` | Re-run safety under automation |
+| `tests/README.md` | TP-CURP-* map |
+| `tests/test_online_curl_install.sh` | Non-TTY pipe regression suite |
 | `docs/requirements/index.md` | Registry SSOT |
 | `./springboot2` | Implementation under test |
 
 ---
 
-**Last Updated**: 2026-07-12  
+**Last Updated**: 2026-07-24  
 **Owner**: springboot2 project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; CIAO Principles 1, 2, 3, 14, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
 
-
 **Empty argv (this product):** See `requirement-shell-cli-zero-arguments.md` § Empty argv specialization — installed empty argv is **domain run**, not install-ensure no-op.
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-CLI-07,11** | `tests/test_cli.sh` | have |
+| **TP-CURP-*** | `tests/test_online_curl_install.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

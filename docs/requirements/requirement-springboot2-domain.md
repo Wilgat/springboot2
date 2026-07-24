@@ -184,7 +184,6 @@ This requirement is satisfied when:
 | `docs/requirements/requirement-shell-output-requirements.md` | Output SSOT for domain messages |
 | `docs/requirements/requirement-shell-idempotency.md` | Ensure re-run (lifecycle); domain preserve is complementary |
 | `docs/requirements/index.md` | Registry SSOT |
-| `docs/terminologies/domain-requirements.md` | Glossary |
 | `./springboot2` | Implementation under test |
 
 ---
@@ -198,3 +197,14 @@ This requirement is satisfied when:
 | Date | Change | Author / agent |
 |------|--------|----------------|
 | 2026-07-15 | Initial Active v1.0.0: domain pins, pipeline, preserve/force, flags, Alpine, help↔dispatcher, Gaps | Grok (authorized 1–3) |
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-DOM-01–09** | `tests/test_domain.sh` | have |
+| **TP-LC-01** | `tests/test_install_lifecycle.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

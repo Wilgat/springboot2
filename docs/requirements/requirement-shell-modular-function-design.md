@@ -15,7 +15,6 @@ It defines modular function organization for a **monolithic yet modular** single
 
 ---
 
-
 ### Identity SSOT (this product — do not diverge)
 
 | Field | Live value (ship unit `./springboot2`) |
@@ -287,7 +286,6 @@ A modular-structure change for springboot2 is **not done** if any of the followi
 **Owner**: springboot2 project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; CIAO Principles 1, 2, 3, 5, 6, 7, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
 
-
 ### Live function inventory (ship unit — A naming)
 
 **Product law inventory** (live `./springboot2` — §3.1 option 1 (A naming); live `out_*`/`inst_*`/`app_*` (A naming)):
@@ -301,3 +299,14 @@ A modular-structure change for springboot2 is **not done** if any of the followi
 | PATH | `path_add_shell`, `path_in_path`, per-shell helpers as present |
 
 Compliance claiming seed-prefix inventory as Implemented is **false**. Live families above are product law (§3.1 option 1 (A naming); P1–P7 closed).
+
+## Design-time verification
+
+| Gate | Suite / gate | Status |
+|------|--------------|--------|
+| Prefix / modular hygiene | code review | review |
+| Behavior | full suite `tests/run.sh` | have (indirect) |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

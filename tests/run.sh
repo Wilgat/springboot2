@@ -36,6 +36,8 @@ export SCRIPT
 . "${TESTS_ROOT}/test_install_lifecycle.sh"
 # shellcheck source=test_domain.sh
 . "${TESTS_ROOT}/test_domain.sh"
+# shellcheck source=test_online_curl_install.sh
+. "${TESTS_ROOT}/test_online_curl_install.sh"
 
 PASS=0
 FAIL=0
@@ -50,6 +52,7 @@ trap _cleanup EXIT INT HUP TERM
 printf 'springboot2 CI tests\n'
 printf 'script: %s\n' "${SCRIPT}"
 printf 'APP_NAME=%s VERSION=%s SPRINGBOOT_VER=%s\n' "${PRODUCT_APP}" "${PRODUCT_VERSION}" "${SPRINGBOOT_VER}"
+printf 'RUN_ONLINE_CURL_TESTS=%s\n' "${RUN_ONLINE_CURL_TESTS:-0}"
 
 if [ ! -f "${SCRIPT}" ]; then
     printf 'ERROR: ship unit missing: %s\n' "${SCRIPT}" >&2
@@ -61,6 +64,7 @@ fi
 
 run_test_cli
 run_test_install_lifecycle
+run_test_online_curl_install
 run_test_domain
 
 printf '\n== summary ==\n'

@@ -15,7 +15,6 @@ It defines lifecycle capabilities and safety rules for this shell project’s se
 
 ---
 
-
 ### Identity SSOT (this product — do not diverge)
 
 | Field | Live value (ship unit `./springboot2`) |
@@ -234,7 +233,6 @@ Work claiming self-management support for springboot2 is **not done** if any of 
 **Owner**: springboot2 project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; CIAO Principles 1, 2, 3, 8, 9, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
 
-
 ### Live function inventory (ship unit — A naming)
 
 **Product law inventory** (live `./springboot2` — §3.1 option 1 (A naming); live `out_*`/`inst_*`/`app_*` (A naming)):
@@ -248,3 +246,14 @@ Work claiming self-management support for springboot2 is **not done** if any of 
 | PATH | `path_add_shell`, `path_in_path`, per-shell helpers as present |
 
 Compliance claiming seed-prefix inventory as Implemented is **false** until rename or notes mark **target vs live**.
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-LC-04–08** | `tests/test_install_lifecycle.sh` | have |
+| **TP-CLI-11** | `tests/test_cli.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

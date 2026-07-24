@@ -18,11 +18,25 @@ No public network for core lifecycle: install tests serve the checkout over `127
 
 | Suite | File | Focus |
 |-------|------|--------|
-| CLI surface | `test_cli.sh` | `sh -n`, optional companion digest, `version` / `help` / `about` (human + JSON), domain flags on help, unknown command, quiet, no `CHECKSUM` on help/about, `env -u HOME`, zero-arg install failure, uninstall fail-closed **law** |
-| Install lifecycle | `test_install_lifecycle.sh` | Isolated `HOME`/`USER_BIN`, local channel empty-argv first install, **hybrid** installed path with `--no-run` (not help), about installed, version-check JSON, self-update already-latest, uninstall force/refuse (may **fail** on live Gaps), skip automatic-checksum Shape A/B |
-| Domain | `test_domain.sh` | Spring Boot pin in help, help↔dispatcher for `status`/`reinstall`/`--reset` (expected Gaps today), `--project-dir` + `--no-run` generate/preserve project, JSON `--no-run` |
+| CLI surface | `test_cli.sh` | **TP-CLI-*** + **TP-U-*** / **TP-CSUM-05**: syntax, companion, version/help/about, quiet/json, storage, unknown, zero-arg fail, set -u, uninstall refuse |
+| Install lifecycle | `test_install_lifecycle.sh` | **TP-LC-*** + **TP-CSUM-***: combined ensure, payload install/uninstall, self-*, downgrade, checksum pin, bad channel |
+| Online curl install | `test_online_curl_install.sh` | **TP-CURL-*** (+ **TP-U-04** pipe): local channel pipes; optional `RUN_ONLINE_CURL_TESTS=1` |
+| Domain | `test_domain.sh` | **TP-DOM-***: pins, scaffold, preserve/reset, JSON, status/reinstall, payload uninstall isolation |
+
+**Silent-failure class:** 0-byte stdout+stderr after one-liner = fail (`assert_not_silent`).  
+
+**Product requirement ↔ test matrix (design phase):** `docs/reviews/requirement-test-matrix.md`  
+**Per-TP status map:** `docs/reviews/test-plan.md` (includes primary requirement column)
 
 **Version note:** suites source `PRODUCT_VERSION` / `APP_NAME` / `SPRINGBOOT_VER` from `./springboot2` via `helpers.sh`. Do not hardcode semver in new tests.
+
+### Optional online gate
+
+```sh
+RUN_ONLINE_CURL_TESTS=1 ./tests/run.sh
+# or override channel:
+RUN_ONLINE_CURL_TESTS=1 ONLINE_SCRIPT_URL='https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2' ./tests/run.sh
+```
 
 ## Notes
 

@@ -13,7 +13,6 @@ It defines a **Type 0–centric self-managed shell CLI** (install / update / uni
 
 ---
 
-
 ### Identity SSOT (this product — do not diverge)
 
 | Field | Live value (ship unit `./springboot2`) |
@@ -224,9 +223,7 @@ This requirement is satisfied for the springboot2 shell CLI when all of the foll
 **Owner**: springboot2 project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; CIAO Principles 1, 2, 3, 5, 8, 14, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite). R1–R6 Notes sync.
 
-
 **Empty argv (this product):** See `requirement-shell-cli-zero-arguments.md` — Type O-P **combined ensure** (ship unit + payload); not Type N help; not Type O-S binary-only.
-
 
 ### Live function inventory (ship unit — A naming)
 
@@ -241,7 +238,6 @@ This requirement is satisfied for the springboot2 shell CLI when all of the foll
 | PATH | `path_add_shell`, `path_in_path`, per-shell helpers as present |
 
 Compliance claiming seed-prefix inventory as Implemented is **false** until rename or notes mark **target vs live**.
-
 
 ### Domain surface (this product)
 
@@ -260,3 +256,13 @@ In addition to Type 0 lifecycle, **springboot2** exposes domain setup/run:
 | Product class | **Type O-P** — `requirement-shell-payload-online-install.md` + term `payload-installer` |
 
 Type 0-only “no domain” claims are **not** sufficient product law for this ship unit.
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-CLI-01–07,11** | `tests/test_cli.sh` | have |
+| **TP-CSUM-05** | `tests/test_cli.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+

@@ -1,13 +1,17 @@
 # =============================================================================
 # tests/test_cli.sh — Type 0 CLI surface (no network install required)
 # =============================================================================
-# Covers: syntax, version, help, about, unknown command, quiet/json modes,
-# help domain + Type 0 surface, env -u HOME, zero-arg install failure exit,
-# self-uninstall fail-closed contract (law) vs live gaps.
-# Live JSON type strings: "out_error" / "out_success" (A naming). Domain types (about, version, …) unchanged.
+# Design-time: declare TP-CLI / TP-U / TP-CSUM-05 when specializing:
+#   requirement-shell-cli-interface
+#   requirement-shell-output-requirements
+#   requirement-shell-cli-storage
+#   requirement-shell-cli-zero-arguments (TP-CLI-09, TP-U)
+#   requirement-shell-self-management (TP-CLI-11)
+#   requirement-shell-automatic-checksum (TP-CSUM-05)
+#   requirement-shell-interactive-vs-noninteractive
+# Status map: docs/reviews/test-plan.md · matrix: docs/reviews/requirement-test-matrix.md
 # =============================================================================
 
-# shellcheck source=helpers.sh
 . "${TESTS_ROOT}/helpers.sh"
 
 run_test_cli() {
@@ -20,67 +24,67 @@ run_test_cli() {
     # --- syntax ---
     bash -n "${SCRIPT}"
     _syn=$?
-    assert_eq "bash -n ${APP_NAME} (syntax)" 0 "$_syn"
+    assert_eq "TP-CLI-01 bash -n syntax" 0 "$_syn"
 
     # --- companion digest (Shape A) ---
     if [ -f "${REPO_ROOT}/${APP_NAME}.sha256" ]; then
         _expected=$(awk '{print $1}' "${REPO_ROOT}/${APP_NAME}.sha256" | tr -d ' \n\r\t')
         _actual=$(sha256sum "${SCRIPT}" | awk '{print $1}')
-        assert_eq "${APP_NAME}.sha256 matches ship unit (first field)" "$_expected" "$_actual"
+        assert_eq "TP-CLI-01 sha256 matches ship unit" "$_expected" "$_actual"
     else
-        t_fail "${APP_NAME}.sha256 missing at repo root (Shape A companion required)"
+        t_fail "TP-CLI-01 sha256 missing"
     fi
 
     # --- version (human) ---
     _out=$(bash "${SCRIPT}" version 2>/dev/null)
     _ec=$?
-    assert_eq "version exit 0" 0 "$_ec"
-    assert_contains "version human mentions version" "$_out" "${PRODUCT_VERSION}"
-    assert_contains "version human mentions app" "$_out" "${APP_NAME}"
+    assert_eq "TP-CLI-02 version exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-02 version human version" "$_out" "${PRODUCT_VERSION}"
+    assert_contains "TP-CLI-02 version human app" "$_out" "${APP_NAME}"
 
     # --- version (json) ---
     _out=$(bash "${SCRIPT}" --json version 2>/dev/null)
     _ec=$?
-    assert_eq "version --json exit 0" 0 "$_ec"
-    assert_contains "version --json type" "$_out" '"type":"version"'
-    assert_contains "version --json app" "$_out" "\"app\":\"${APP_NAME}\""
-    assert_contains "version --json version field" "$_out" "\"version\":\"${PRODUCT_VERSION}\""
+    assert_eq "TP-CLI-02 version --json exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-02 version --json type" "$_out" '"type":"version"'
+    assert_contains "TP-CLI-02 version --json app" "$_out" "\"app\":\"${APP_NAME}\""
+    assert_contains "TP-CLI-02 version --json version field" "$_out" "\"version\":\"${PRODUCT_VERSION}\""
 
     # --- help (human): Type 0 + domain surface ---
     _out=$(bash "${SCRIPT}" help 2>/dev/null)
     _ec=$?
-    assert_eq "help exit 0" 0 "$_ec"
-    assert_contains "help lists version-check" "$_out" "version-check"
-    assert_contains "help lists self-update" "$_out" "self-update"
-    assert_contains "help lists self-uninstall" "$_out" "self-uninstall"
-    assert_contains "help lists self-upgrade" "$_out" "self-upgrade"
-    assert_contains "help lists payload install" "$_out" "install"
-    assert_contains "help lists payload uninstall" "$_out" "uninstall"
-    assert_contains "help lists about" "$_out" "about"
-    assert_contains "help lists --json" "$_out" "--json"
-    assert_contains "help lists --no-run" "$_out" "--no-run"
-    assert_contains "help lists --project-dir" "$_out" "--project-dir"
-    assert_contains "help mentions Spring Boot pin" "$_out" "${SPRINGBOOT_VER}"
-    assert_contains "help separates payload vs ship layers" "$_out" "Payload"
-    assert_not_contains "help must not list CHECKSUM" "$_out" "CHECKSUM"
+    assert_eq "TP-CLI-03 help exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-03 help lists version-check" "$_out" "version-check"
+    assert_contains "TP-CLI-03 help lists self-update" "$_out" "self-update"
+    assert_contains "TP-CLI-03 help lists self-uninstall" "$_out" "self-uninstall"
+    assert_contains "TP-CLI-03 help lists self-upgrade" "$_out" "self-upgrade"
+    assert_contains "TP-CLI-03 help lists payload install" "$_out" "install"
+    assert_contains "TP-CLI-03 help lists payload uninstall" "$_out" "uninstall"
+    assert_contains "TP-CLI-03 help lists about" "$_out" "about"
+    assert_contains "TP-CLI-03 help lists --json" "$_out" "--json"
+    assert_contains "TP-CLI-03 help lists --no-run" "$_out" "--no-run"
+    assert_contains "TP-CLI-03 help lists --project-dir" "$_out" "--project-dir"
+    assert_contains "TP-CLI-03 help Spring Boot pin" "$_out" "${SPRINGBOOT_VER}"
+    assert_contains "TP-CLI-03 help payload vs ship" "$_out" "Payload"
+    assert_not_contains "TP-CSUM-05 help must not list CHECKSUM" "$_out" "CHECKSUM"
 
     # --- help (json): short object, not full prose ---
     _out=$(bash "${SCRIPT}" --json help 2>/dev/null)
     _ec=$?
-    assert_eq "help --json exit 0" 0 "$_ec"
-    assert_contains "help --json type success" "$_out" '"type":"out_success"'
-    assert_contains "help --json mentions human mode" "$_out" "Help text"
+    assert_eq "TP-CLI-04 help --json exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-04 help --json type" "$_out" '"type":"out_success"'
+    assert_contains "TP-CLI-04 help --json human mode" "$_out" "Help text"
 
     # --- about (json): no CHECKSUM field; storage resolve fields ---
     _out=$(bash "${SCRIPT}" --json about 2>/dev/null)
     _ec=$?
-    assert_eq "about --json exit 0" 0 "$_ec"
-    assert_contains "about --json type" "$_out" '"type":"about"'
-    assert_contains "about --json app" "$_out" "\"app\":\"${APP_NAME}\""
-    assert_not_contains "about --json must not include CHECKSUM" "$_out" "CHECKSUM"
-    assert_contains "about --json effective_storage" "$_out" '"effective_storage"'
-    assert_contains "about --json storage_dir" "$_out" '"storage_dir"'
-    assert_contains "about --json storage includes app name" "$_out" "${APP_NAME}"
+    assert_eq "TP-CLI-04 about --json exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-04 about --json type" "$_out" '"type":"about"'
+    assert_contains "TP-CLI-04 about --json app" "$_out" "\"app\":\"${APP_NAME}\""
+    assert_not_contains "TP-CSUM-05 about no CHECKSUM" "$_out" "CHECKSUM"
+    assert_contains "TP-CLI-05 about effective_storage" "$_out" '"effective_storage"'
+    assert_contains "TP-CLI-05 about storage_dir" "$_out" '"storage_dir"'
+    assert_contains "TP-CLI-05 about storage app name" "$_out" "${APP_NAME}"
 
     # --- storage resolve isolation (Option A: EFFECTIVE_STORAGE_DIR via util_resolve_storage) ---
     ci_isolated_env
@@ -89,16 +93,16 @@ run_test_cli() {
         bash "${SCRIPT}" --json about 2>/dev/null
     )
     _ec=$?
-    assert_eq "about --json under isolated HOME exit 0" 0 "$_ec"
+    assert_eq "TP-CLI-05 about isolated HOME" 0 "$_ec"
     # Must isolate by app name; user may be real username even under isolated HOME
-    assert_contains "isolated about effective_storage has app" "$_out" "${APP_NAME}"
+    assert_contains "TP-CLI-05 isolated effective_storage" "$_out" "${APP_NAME}"
     # effective_storage is often /dev/shm or /tmp when writable — still must contain APP_NAME
     case "$_out" in
-        *'"effective_storage":"'*"${APP_NAME}"*) t_pass "effective_storage path contains ${APP_NAME}" ;;
+        *'"effective_storage":"'*"${APP_NAME}"*) t_pass "TP-CLI-05 effective_storage path app" ;;
         *) t_fail "effective_storage missing app isolation in: $(_trunc "$_out")" ;;
     esac
     # STORAGE_DIR fallback field should reference cache path with app+user shape
-    assert_contains "storage_dir field present under isolation" "$_out" '"storage_dir"'
+    assert_contains "TP-CLI-05 storage_dir under isolation" "$_out" '"storage_dir"'
     # STORAGE_DIR env override appears on storage_dir (tier-3 config field), not necessarily effective
     _custom="${CI_HOME}/custom-storage-root"
     _out=$(
@@ -106,12 +110,12 @@ run_test_cli() {
         bash "${SCRIPT}" --json about 2>/dev/null
     )
     _ec=$?
-    assert_eq "about --json with STORAGE_DIR override exit 0" 0 "$_ec"
-    assert_contains "storage_dir honors STORAGE_DIR env" "$_out" "custom-storage-root"
+    assert_eq "TP-CLI-05 STORAGE_DIR override exit" 0 "$_ec"
+    assert_contains "TP-CLI-05 storage_dir honors STORAGE_DIR" "$_out" "custom-storage-root"
     # Effective root must exist after resolve (create-before-return)
     _eff=$(printf '%s' "$_out" | sed -n 's/.*"effective_storage":"\([^"]*\)".*/\1/p' | head -n1)
     if [ -n "$_eff" ] && [ -d "$_eff" ]; then
-        t_pass "effective_storage directory exists after resolve"
+        t_pass "TP-CLI-05 effective_storage dir exists"
     else
         t_fail "effective_storage missing or not a directory: '$(_trunc "${_eff:-empty}")'"
     fi
@@ -119,7 +123,7 @@ run_test_cli() {
     _who=$(id -un 2>/dev/null || echo unknown)
     case "$_out" in
         *'"effective_storage":"'*"${_who}"*|*'"effective_storage":"'*"unknown"*) \
-            t_pass "effective_storage includes user segment" ;;
+            t_pass "TP-CLI-05 effective_storage user segment" ;;
         *) t_fail "effective_storage missing user segment for '${_who}': $(_trunc "$_out")" ;;
     esac
     ci_cleanup_env
@@ -127,25 +131,25 @@ run_test_cli() {
     # --- unknown command (out_die → exit 1; JSON type "out_error") ---
     _err=$(bash "${SCRIPT}" no-such-command 2>&1 >/dev/null)
     _ec=$?
-    assert_eq "unknown command exit 1" 1 "$_ec"
-    assert_contains "unknown command error text" "$_err" "Invalid command"
+    assert_eq "TP-CLI-06 unknown command exit 1" 1 "$_ec"
+    assert_contains "TP-CLI-06 unknown command error text" "$_err" "Invalid command"
 
     # JSON errors go to stdout via out_json; capture both streams
     _err=$(bash "${SCRIPT}" --json no-such-command 2>&1)
     _ec=$?
-    assert_eq "unknown command --json exit 1" 1 "$_ec"
-    assert_contains "unknown command --json type error" "$_err" '"type":"out_error"'
+    assert_eq "TP-CLI-06 unknown --json exit 1" 1 "$_ec"
+    assert_contains "TP-CLI-06 unknown --json type error" "$_err" '"type":"out_error"'
 
     # --- quiet: version should not print info banners ---
     _out=$(bash "${SCRIPT}" --quiet version 2>/dev/null)
     _ec=$?
-    assert_eq "version --quiet exit 0" 0 "$_ec"
+    assert_eq "TP-CLI-07 version --quiet exit 0" 0 "$_ec"
     if [ -z "$_out" ]; then
-        t_pass "version --quiet suppresses human info"
+        t_pass "TP-CLI-07 quiet suppresses info"
     else
         _trim=$(printf '%s' "$_out" | tr -d ' \t\n\r')
         if [ -z "$_trim" ]; then
-            t_pass "version --quiet suppresses human info"
+            t_pass "TP-CLI-07 quiet suppresses info"
         else
             t_fail "version --quiet expected empty stdout, got '$(_trunc "$_out")'"
         fi
@@ -154,8 +158,8 @@ run_test_cli() {
     # --- HOME unset under set -u (INC-20260713-001 pattern) ---
     _out=$(env -u HOME bash "${SCRIPT}" version 2>/dev/null)
     _ec=$?
-    assert_eq "env -u HOME version exit 0" 0 "$_ec"
-    assert_contains "env -u HOME version still reports version" "$_out" "${PRODUCT_VERSION}"
+    assert_eq "TP-U-01 env -u HOME version exit 0" 0 "$_ec"
+    assert_contains "TP-U-01 env -u HOME reports version" "$_out" "${PRODUCT_VERSION}"
 
     # --- zero-arg auto-install propagates failure (not exit 0 on download fail) ---
     # Empty argv only (no --json flag — auto-install gate is $# -eq 0).
@@ -169,13 +173,13 @@ run_test_cli() {
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
     if [ "$_ec" -ne 0 ]; then
-        t_pass "zero-arg failed install exits non-zero"
+        t_pass "TP-CLI-09 zero-arg fail non-zero"
     else
         t_fail "zero-arg failed install expected non-zero exit, got 0 (stdout='$(_trunc "$_out")' err='$(_trunc "$_err")')"
     fi
-    assert_file_missing "zero-arg failed install left no binary" "${CI_USER_BIN}/${APP_NAME}"
+    assert_file_missing "TP-CLI-09 zero-arg fail no binary" "${CI_USER_BIN}/${APP_NAME}"
     if [ -n "${_out}${_err}" ]; then
-        t_pass "zero-arg failed install is not silent (has output)"
+        t_pass "TP-CLI-09 zero-arg fail not silent"
     else
         t_fail "zero-arg failed install silent (no stdout/stderr) — INC-20260720-001"
     fi
@@ -208,13 +212,13 @@ EOF
     _ec=$?
     _err=$(cat "${_errf}" 2>/dev/null || true)
     if [ -n "${_out}${_err}" ]; then
-        t_pass "bashrc+sdkman under set -u is not silent"
+        t_pass "TP-U-03 bashrc+sdkman not silent"
     else
         t_fail "bashrc+sdkman silent abort (0 bytes out) — set -u source bug"
     fi
     # Must not die before any product messaging solely from sourcing bashrc
     if printf '%s' "${_out}${_err}" | grep -qE 'SDKMAN|Payload|setup|Spring|INFO|OK|ERROR|already'; then
-        t_pass "bashrc+sdkman path reaches product messages"
+        t_pass "TP-U-03 bashrc+sdkman product messages"
     else
         t_fail "bashrc+sdkman no product messages: '$(_trunc "${_out}${_err}")'"
     fi
@@ -236,16 +240,29 @@ EOF
     _err=$(cat "${_errf}" 2>/dev/null || true)
     # Law: non-zero + confirm_required. Live may wrong-exit 0 with success cancel.
     if [ "$_ec" -ne 0 ]; then
-        t_pass "self-uninstall --json without --force exit non-zero"
+        t_pass "TP-CLI-11 self-uninstall refuse non-zero"
     else
         t_fail "self-uninstall --json without --force expected non-zero (INC-002), got 0 out='$(_trunc "$_out$_err")'"
     fi
-    assert_file_exists "binary remains without --force" "${CI_USER_BIN}/${APP_NAME}"
+    assert_file_exists "TP-CLI-11 binary remains without force" "${CI_USER_BIN}/${APP_NAME}"
     # Must not claim success cancel as machine success with wrong schema only
     if printf '%s' "${_out}${_err}" | grep -q 'confirm_required'; then
-        t_pass "self-uninstall exposes confirm_required when refusing"
+        t_pass "TP-CLI-11 confirm_required"
     else
         t_fail "self-uninstall law expects confirm_required code (live Gap if missing): '$(_trunc "${_out}${_err}")'"
     fi
     ci_cleanup_env
+
+    # --- TP-U-05: safe external source helper present (set -u Case C) ---
+    if grep -q 'util_source_external_safe' "${SCRIPT}"; then
+        t_pass "TP-U-05 util_source_external_safe present"
+    else
+        t_fail "TP-U-05 missing util_source_external_safe (set -u Case C)"
+    fi
+
+    # --- TP-CLI-02 about human (non-json) ---
+    _out=$(bash "${SCRIPT}" about 2>/dev/null)
+    _ec=$?
+    assert_eq "TP-CLI-02 about human exit 0" 0 "$_ec"
+    assert_contains "TP-CLI-02 about human mentions app" "$_out" "${APP_NAME}"
 }

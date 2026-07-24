@@ -13,7 +13,6 @@ It defines the centralized output system and stdout/stderr channel contracts for
 
 ---
 
-
 ### Identity SSOT (this product — do not diverge)
 
 | Field | Live value (ship unit `./springboot2`) |
@@ -266,7 +265,6 @@ Output-related work for springboot2 is **not done** if any of the following fail
 **Owner**: springboot2 project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; CIAO Principles 1, 2, 3, 4, 12, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
 
-
 ### Live function inventory (ship unit — A naming)
 
 **Product law inventory** (live `./springboot2` — §3.1 option 1 (A naming); live `out_*`/`inst_*`/`app_*` (A naming)):
@@ -280,3 +278,13 @@ Output-related work for springboot2 is **not done** if any of the following fail
 | PATH | `path_add_shell`, `path_in_path`, per-shell helpers as present |
 
 Compliance claiming seed-prefix inventory as Implemented is **false** until rename or notes mark **target vs live**.
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-CLI-04,07** | `tests/test_cli.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

@@ -101,3 +101,10 @@ docs/**
 
 # --- project-local reference snapshots (not product ship surface) ---
 pomo-*-domain-ref
+
+# --- local bootstrap / harness sync work (not product) ---
+.bootstrap-work/
+.harness-sync-*-bak*/
+.harness-sync-from-*/
+err[A-Z].txt
+out[A-Z].txt

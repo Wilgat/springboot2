@@ -15,7 +15,6 @@ It defines re-run safety for ensure-style shell lifecycle commands (install, PAT
 
 ---
 
-
 ### Identity SSOT (this product — do not diverge)
 
 | Field | Live value (ship unit `./springboot2`) |
@@ -191,5 +190,14 @@ A state-changing shell change for springboot2 is **not done** if any of the foll
 **Owner**: springboot2 project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; related `requirement-shell-cli-interface.md`; CIAO Principles 1, 2, 3, 9, 10, 18 (https://github.com/cloudgen/ciao); CIAO-Lite (https://github.com/cloudgen/ciao-lite).
 
-
 **Empty argv (this product):** See `requirement-shell-cli-zero-arguments.md` § Empty argv specialization — installed empty argv is **domain run**, not install-ensure no-op.
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-LC-01,05** | `tests/test_install_lifecycle.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

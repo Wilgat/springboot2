@@ -45,7 +45,6 @@ Empty argv detect cases:
 
 ---
 
-
 ### Identity SSOT (this product — do not diverge)
 
 | Field | Live value (ship unit `./springboot2`) |
@@ -162,7 +161,7 @@ Live scalars are owned by the ship unit Config block. Requirement **cores** stay
 | **Output SSOT** | `out_success` / `out_info` / `out_json` / errors via `out_*` |
 | **Channel** | `SCRIPT_URL` (compose from `REPO_USER` / `REPO_NAME` / `APP_NAME`) for download path inside install |
 | **Live status** | Type O-P combined ensure implemented in `app_main` (no exit after ship place; non-interactive `inst_self_update` when installed; payload fallthrough). |
-| **Tests** | `tests/test_cli.sh`; `tests/test_install_lifecycle.sh`; **required:** stdin-pipe smoke for loud Case A + not silent no-op |
+| **Tests** | `tests/test_cli.sh`; `tests/test_install_lifecycle.sh`; `tests/test_online_curl_install.sh`; map `tests/README.md` |
 
 #### Dispatcher algorithm (normative sketch — Type O-P target)
 
@@ -242,7 +241,8 @@ This requirement is satisfied when all of the following hold:
 5. `--force` / `reinstall` only for deliberate replace; not required for normal ensure.  
 6. `help` works when invoked explicitly.  
 7. Tests cover pipe smoke (not silent), Case A failure, Case B/C not-help.  
-8. Changes cite `requirement-shell-cli-zero-arguments` and term `payload-installer`.
+8. **TP-CURL Core** cases green via `tests/test_online_curl_install.sh` (local channel; silent = 0-byte out+err forbidden): first pipe, second pipe, bashrc+sdkman pipe, bad channel loud, `curl \| sh` bash gate, `bash -s -- version`, refuse install. Optional online gate `RUN_ONLINE_CURL_TESTS=1` (TP-CURL-09).  
+9. Changes cite `requirement-shell-cli-zero-arguments` and term `payload-installer`.
 
 ---
 
@@ -250,10 +250,7 @@ This requirement is satisfied when all of the following hold:
 
 | Artifact | Role |
 |----------|------|
-| `docs/terminologies/payload-installer.md` | Type O-P definition |
 | `docs/requirements/requirement-shell-payload-online-install.md` | Product Type O-P class law (install/uninstall vs self-*) |
-| `docs/templates/template-payload-online-install.md` | Portable O-P mold |
-| `docs/terminologies/type-o-empty-argv.md` | Type O umbrella + O-S/O-P depth |
 | `docs/requirements/requirement-shell-cli-interface.md` | Full command surface; empty-argv row must match this SSOT |
 | `docs/requirements/requirement-shell-idempotency.md` | Ensure re-run / force boundary |
 | `docs/requirements/requirement-shell-interactive-vs-noninteractive.md` | TTY vs pipe for Case A |
@@ -262,8 +259,8 @@ This requirement is satisfied when all of the following hold:
 | `docs/requirements/requirement-shell-automatic-checksum.md` | Integrity on install download path |
 | `docs/requirements/requirement-springboot2-domain.md` | Payload pipeline |
 | Repo root `./springboot2` | Implementation (`app_main`, `inst_*`, domain helpers) |
-| `docs/incidents/incident-20260720-001-curl-bash-silent-no-self-install.md` | Silent one-liner / no install incident |
-| `tests/test_cli.sh`, `tests/test_install_lifecycle.sh` | Regression coverage |
+| `tests/README.md` | TP-CURP-* map |
+| `tests/test_cli.sh`, `tests/test_install_lifecycle.sh`, `tests/test_online_curl_install.sh` | Regression coverage |
 
 ---
 
@@ -275,7 +272,6 @@ This requirement is satisfied when all of the following hold:
 | 2026-07-14 | v1.1.0: Classify product as Type O (online-install) under dual-type empty-argv template model | Grok |
 | 2026-07-15 | v1.2.0: Promote hybrid supersession banner to top; soft-supersede portable Cases B/C force-off as domain run; cite domain requirement | Grok (authorized 1–3) |
 | 2026-07-20 | v1.3.0: **Type O-P payload installer** law; combined ensure; first pipe must not exit binary-only; non-interactive upgrade; loud one-liner; live Gap honesty | Grok (owner request) |
-
 
 ### Empty argv specialization (springboot2 — Type O-P payload installer)
 
@@ -289,3 +285,18 @@ Normative summary lives in the **Payload installer law** banner at the top of th
 | **Flags** | `--project-dir`, `--no-run`, `--force`, `--force-user`, `--force-root`, `--json`, `--quiet` |
 
 Portable Type O-S matrices are **not** full product law for springboot2.
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-CLI-09** | `tests/test_cli.sh` | have |
+| **TP-LC-01** | `tests/test_install_lifecycle.sh` | have |
+| **TP-CURL-01–08** | `tests/test_online_curl_install.sh` | have |
+| **TP-CURL-09** | `tests/test_online_curl_install.sh` | optional |
+| **TP-U-*** | `tests/test_cli.sh` + curl suite | have |
+| **TP-DOM-*** (Type O-P) | `tests/test_domain.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

@@ -93,6 +93,31 @@ assert_nonzero() {
     fi
 }
 
+assert_not_silent() {
+    # assert_not_silent <label> <stdout> <stderr>
+    # INC-20260720-001 class: both streams empty is a critical one-liner defect
+    _lab="$1"; _out="$2"; _err="$3"
+    if [ -z "${_out}${_err}" ]; then
+        t_fail "$_lab (silent: 0 bytes stdout+stderr)"
+    else
+        t_pass "$_lab"
+    fi
+}
+
+# Bytes on path (for file-captured streams)
+assert_not_silent_files() {
+    # assert_not_silent_files <label> <stdout_file> <stderr_file>
+    _lab="$1"; _of="$2"; _ef="$3"
+    _ob=0; _eb=0
+    [ -f "$_of" ] && _ob=$(wc -c <"$_of")
+    [ -f "$_ef" ] && _eb=$(wc -c <"$_ef")
+    if [ "$_ob" -eq 0 ] && [ "$_eb" -eq 0 ]; then
+        t_fail "$_lab (silent: 0+0 bytes on out/err files)"
+    else
+        t_pass "$_lab (out=${_ob}B err=${_eb}B)"
+    fi
+}
+
 _trunc() {
     # keep assertion noise small
     printf '%s' "$1" | tr '\n' ' ' | cut -c1-160

@@ -82,7 +82,7 @@ This requirement is the **project Single Source of Truth** for springboot2 as a 
 | **Handlers** | `install` → `payload_install`; `uninstall` → `payload_uninstall`; `self-update`/`self-upgrade` → `inst_self_update`; `self-uninstall` → `inst_self_uninstall` |
 | **Empty argv** | Ship ensure without exit-on-success; fall through to domain/run |
 | **Payload pins** | `requirement-springboot2-domain.md` |
-| **Tests** | `tests/test_install_lifecycle.sh`, `test_domain.sh`, `test_cli.sh` — must detect binary-only first pipe and missing subcommands |
+| **Tests** | `tests/test_install_lifecycle.sh`, `test_domain.sh`, `test_cli.sh`, **`test_online_curl_install.sh`** (TP-CURL — real `curl \| bash` against local channel; silent-class ban) — must detect binary-only first pipe, silent 0-byte abort, and missing subcommands |
 
 ### 2.6 Protection Rule
 
@@ -102,21 +102,39 @@ This requirement is the **project Single Source of Truth** for springboot2 as a 
 2. Ship unit implements command split + combined empty argv.  
 3. Help ↔ dispatcher aligned.  
 4. Tests cover payload install/uninstall, self-*, combined ensure, loud failures.  
-5. Domain pins remain in `requirement-springboot2-domain.md`.
+5. Domain pins remain in `requirement-springboot2-domain.md`.  
 
-## 4. Related
+## 4. Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-LC-01–03** | `tests/test_install_lifecycle.sh` | have |
+| **TP-DOM-*** | `tests/test_domain.sh` | have |
+| **TP-CURP-*** | `tests/test_online_curl_install.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+
+## 5. Related
 
 | Artifact | Role |
 |----------|------|
-| `template-payload-online-install.md` | Portable mold |
 | `requirement-shell-cli-zero-arguments.md` | Empty-argv detail |
 | `requirement-shell-self-management.md` | self-* only |
 | `requirement-springboot2-domain.md` | Payload content |
 | `requirement-shell-cli-interface.md` | Full command table |
-| INC-20260720-001 | Silent curl\|bash |
+| `tests/README.md` | TP status map |
+| `tests/test_online_curl_install.sh` | TP-CURL suite |
+| `./springboot2` | Implementation |
 
-## 5. Revision history
+## 6. Revision history
 
 | Date | Change |
 |------|--------|
+| 2026-07-24 | v1.2.0 Design-time verification TP map (git-surface clean) |
+| 2026-07-24 | v1.1.0 DoD + tests: TP-CURL suite |
 | 2026-07-20 | v1.0.0 Initial Type O-P product law; install/uninstall vs self-* |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

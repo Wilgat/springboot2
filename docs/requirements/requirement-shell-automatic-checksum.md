@@ -13,7 +13,6 @@ This requirement is the **project Single Source of Truth** for **automatic compa
 
 ---
 
-
 ### Identity SSOT (this product — do not diverge)
 
 | Field | Live value (ship unit `./springboot2`) |
@@ -225,7 +224,6 @@ Violating this rule is a requirements failure and must be recorded (incident or 
 | 2026-07-13 | Initial Active v1.0.0 — automatic companion digest + transparency (link/value/result); secondary CHECKSUM; README primary-path rules | Multi-agent council |
 | 2026-07-13 | `CHECKSUM` = install-path runtime variable only; **MUST NOT** display in `help` / `about` | Multi-agent council |
 
-
 ### Live function inventory (ship unit — A naming)
 
 **Product law inventory** (live `./springboot2` — §3.1 option 1 (A naming); live `out_*`/`inst_*`/`app_*` (A naming)):
@@ -239,3 +237,13 @@ Violating this rule is a requirements failure and must be recorded (incident or 
 | PATH | `path_add_shell`, `path_in_path`, per-shell helpers as present |
 
 Compliance claiming seed-prefix inventory as Implemented is **false** until rename or notes mark **target vs live**.
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-CSUM-01–05** | `tests/test_cli.sh` + `tests/test_install_lifecycle.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+

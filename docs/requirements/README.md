@@ -8,7 +8,7 @@ Authoritative product and engineering requirements for this project live here.
 
 **Identity SSOT (do not diverge):** Product name and install channel come from ship unit `./springboot2` — `APP_NAME="springboot2"`, `VERSION="2.3.1"`, `REPO_USER="Wilgat"`, `REPO_NAME="springboot2"`, `SCRIPT_URL=https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2`. **Type O-P** payload online installer law: **`requirement-shell-payload-online-install.md`**. Ship-unit self-* vs payload install/uninstall split. Domain pins: **`requirement-springboot2-domain.md`**. Composition also covers zero-arguments, CLI, checksum, self-management, interactive, idempotency, storage. Do **not** invent requirement paths without a real ownership gap — register new files in `index.md` in the same change.
 
-**Sufficiency (glossary):** Coverage review language lives in the harness glossary terms *requirement-sufficient-check* and *domain-requirements* (local `docs/terminologies/` when present). This versioned folder does not re-export harness path inventories.
+**Sufficiency (glossary):** Coverage review language uses project glossary terms *requirement-sufficient-check* and *domain-requirements* when those terms exist in the local agent workspace. This versioned folder does not re-export harness path inventories.
 
 ## Purpose
 

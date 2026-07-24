@@ -142,3 +142,13 @@ First match that is available and writable:
 |------|--------|----------------|
 | 2026-07-15 | Initial Active v1.0.0: live resolve chain, isolation, honest no-call-site Gap | Grok |
 | 2026-07-15 | Create-all-tiers fail-closed; TMPDIR wire; `out_die` notes; PROJECT_DIR not under /tmp | Grok |
+
+## Design-time verification
+
+| TP family / ID | Suite | Status |
+|----------------|-------|--------|
+| **TP-CLI-05** | `tests/test_cli.sh` | have |
+
+**Suite map:** `tests/README.md` (TP labels in suite files).
+
+
