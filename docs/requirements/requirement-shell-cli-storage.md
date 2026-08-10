@@ -16,7 +16,7 @@ This requirement is the **project Single Source of Truth** for **shell CLI stora
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.1` |
+| **VERSION** | `2.3.2` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` |
@@ -126,7 +126,7 @@ First match that is available and writable:
 | `docs/requirements/requirement-shell-modular-function-design.md` | `util_*` family ownership |
 | `docs/requirements/requirement-shell-output-requirements.md` | Data-return stdout vs product UI |
 | `docs/requirements/requirement-shell-self-management.md` | Install staging (`mktemp`) |
-| `docs/requirements/requirement-springboot2-domain.md` | Domain `PROJECT_DIR` (not this resolver) |
+| `docs/requirements/requirement-domain-springboot2.md` | Domain `PROJECT_DIR` (not this resolver) |
 | `docs/requirements/index.md` | Registry |
 | `./springboot2` | Implementation (`util_resolve_storage`) |
 

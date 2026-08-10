@@ -1,4 +1,4 @@
-**file**: docs/requirements/requirement-springboot2-domain.md  
+**file**: docs/requirements/requirement-domain-springboot2.md  
 **Status**: Active (Version 1.0.0)  
 **Philosophy**: CIAO / CIAO-Lite (Caution • Intentional • Anti-fragile • Over-engineered)
 
@@ -20,7 +20,7 @@ It owns product ops so agents do not treat shell lifecycle files alone as full-p
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.1` |
+| **VERSION** | `2.3.2` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -170,7 +170,7 @@ This requirement is satisfied when:
 5. Alpine/bash §2.5 holds.  
 6. Help↔dispatcher §2.6 has no silent drift.  
 7. Registered in `docs/requirements/index.md`.  
-8. Traceability: implementation changes cite this file path / key `requirement-springboot2-domain`.
+8. Traceability: implementation changes cite this file path / key `requirement-domain-springboot2`.
 
 ---
 
@@ -188,7 +188,7 @@ This requirement is satisfied when:
 
 ---
 
-**Last Updated**: 2026-07-15  
+**Last Updated**: 2026-08-10  
 **Owner**: springboot2 project maintainers  
 **Alignment**: Registry `docs/requirements/index.md`; CIAO (https://github.com/cloudgen/ciao); CIAO-Lite; intentional Boot 2.7.18 family pin.
 
@@ -196,6 +196,7 @@ This requirement is satisfied when:
 
 | Date | Change | Author / agent |
 |------|--------|----------------|
+| 2026-08-10 | Rename key/path to `requirement-domain-springboot2` (domain naming law) | Grok (fix-all) |
 | 2026-07-15 | Initial Active v1.0.0: domain pins, pipeline, preserve/force, flags, Alpine, help↔dispatcher, Gaps | Grok (authorized 1–3) |
 
 ## Design-time verification

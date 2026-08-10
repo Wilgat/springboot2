@@ -20,7 +20,7 @@ It defines modular function organization for a **monolithic yet modular** single
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.1` |
+| **VERSION** | `2.3.2` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -304,9 +304,10 @@ Compliance claiming seed-prefix inventory as Implemented is **false**. Live fami
 
 | Gate | Suite / gate | Status |
 |------|--------------|--------|
-| Prefix / modular hygiene | code review | review |
+| **TP-MOD-01** | `tests/test_cli.sh` — A-prefix families present on ship unit | **have** |
+| **TP-MOD-02** | `tests/test_cli.sh` — no `template-*` / `skill-*` as product behavioral authority | **have** |
 | Behavior | full suite `tests/run.sh` | have (indirect) |
 
-**Suite map:** `tests/README.md` (TP labels in suite files).
+**Suite map:** `tests/README.md` · product map: `reviews/test-plan.md`.
 
 

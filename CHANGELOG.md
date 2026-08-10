@@ -8,12 +8,25 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) 
 
 ## [Unreleased]
 
+---
+
+## [2.3.2] - 2026-08-10
+
+### Added
+- Public **`reviews/`** surface (what-to-review, test-plan, lessons, requirement-test-matrix, reports).
+- Product class law: **`requirement-class-software-dev`** (bash Type O-P residual stack + peer pointers).
+- Automated modular hygiene cases **TP-MOD-01** / **TP-MOD-02** in `tests/test_cli.sh`.
+
 ### Changed
-- **Requirements:** design-time verification tables (TP families) on all shell + domain product-law files; suite pointers use public `tests/` only.
-- **Tests:** TP-labeled cases across CLI, install lifecycle, and domain suites; silent-failure guard; new optional online/local curl pipe suite (`test_online_curl_install.sh`, `TP-CURL-*`).
+- Domain SSOT renamed to **`requirement-domain-springboot2`** (registry, peer cites, ship-unit header comment).
+- Requirements README inventory honesty (class + ten shell REQs + domain); modular DTV maps to TP-MOD.
+- Suite / test README map points at `reviews/` (not missing `docs/reviews/`).
+- Requirements design-time verification tables (TP families) and expanded TP-labeled suites (CLI, install lifecycle, domain, optional online curl) from the prior unreleased track.
 
 ### Notes
-- Product **VERSION** remains **2.3.1** (ship unit unchanged).
+- Product **VERSION** `2.3.2`. No intentional CLI behavior change vs 2.3.1 (comment cite + quality/law/proof packaging).
+- Companion: after any edit to `./springboot2`, run  
+  `sha256sum springboot2 | awk '{print $1"  springboot2"}' > springboot2.sha256`
 
 ---
 
@@ -146,7 +159,8 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) 
 
 **GitHub**: https://github.com/Wilgat/springboot2
 
-[Unreleased]: https://github.com/Wilgat/springboot2/compare/2.3.1...HEAD
+[Unreleased]: https://github.com/Wilgat/springboot2/compare/2.3.2...HEAD
+[2.3.2]: https://github.com/Wilgat/springboot2/compare/2.3.1...2.3.2
 [2.3.1]: https://github.com/Wilgat/springboot2/compare/2.3.0...2.3.1
 [2.3.0]: https://github.com/Wilgat/springboot2/compare/2.2.0...2.3.0
 [2.2.0]: https://github.com/Wilgat/springboot2/compare/2.1.0...2.2.0

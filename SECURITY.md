@@ -4,7 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| **2.3.1** (current) | Yes — report security issues against this release |
+| **2.3.2** (current) | Yes — report security issues against this release |
+| 2.3.1 | Superseded; upgrade to current when possible |
 | 2.3.0 | Superseded; upgrade to current when possible |
 | 2.2.0 | Superseded; upgrade to current when possible |
 | 2.1.0 | Superseded; upgrade to current when possible |

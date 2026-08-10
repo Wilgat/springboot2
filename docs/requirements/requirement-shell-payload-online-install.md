@@ -4,12 +4,12 @@
 
 ## 1. Purpose
 
-This requirement is the **project Single Source of Truth** for springboot2 as a **Type O-P [payload online installer](../terminologies/payload-installer.md)**: one-liner / empty-argv **combined ensure** of the CLI ship unit **and** Spring Boot payload, with a strict command split between **ship-unit self-care** and **payload install/uninstall**.
+This requirement is the **project Single Source of Truth** for springboot2 as a **Type O-P payload online installer**: one-liner / empty-argv **combined ensure** of the CLI ship unit **and** Spring Boot payload, with a strict command split between **ship-unit self-care** and **payload install/uninstall**.
 
-**Not the same as** script-alone online install (Type O-S / `template-online-install.md` only). Portable mold: `template-payload-online-install.md`.
+**Not the same as** script-alone online install (Type O-S / online-install mold only). Portable mold: **LM-PAYLOAD-ONLINE-INSTALL** (path secondary when molds are available).
 
 **Scope:** Product class O-P; combined empty-argv; command vocabulary (`install`/`uninstall` vs `self-update`/`self-uninstall`); success/error message cases for both layers; ownership map.  
-**Out of scope (cited):** Ship-unit download/checksum algorithms (`requirement-shell-automatic-checksum.md`, install primitives in self-management); Spring Boot pins/order detail (`requirement-springboot2-domain.md`); full flag catalog depth (`requirement-shell-cli-interface.md`); output function catalog (`requirement-shell-output-requirements.md`).
+**Out of scope (cited):** Ship-unit download/checksum algorithms (`requirement-shell-automatic-checksum.md`, install primitives in self-management); Spring Boot pins/order detail (`requirement-domain-springboot2.md`); full flag catalog depth (`requirement-shell-cli-interface.md`); output function catalog (`requirement-shell-output-requirements.md`).
 
 ---
 
@@ -18,7 +18,7 @@ This requirement is the **project Single Source of Truth** for springboot2 as a 
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.1` |
+| **VERSION** | `2.3.2` |
 | **Product class** | **Type O-P — payload online installer** |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | composed GitHub raw default |
@@ -81,7 +81,7 @@ This requirement is the **project Single Source of Truth** for springboot2 as a 
 |------|--------|
 | **Handlers** | `install` → `payload_install`; `uninstall` → `payload_uninstall`; `self-update`/`self-upgrade` → `inst_self_update`; `self-uninstall` → `inst_self_uninstall` |
 | **Empty argv** | Ship ensure without exit-on-success; fall through to domain/run |
-| **Payload pins** | `requirement-springboot2-domain.md` |
+| **Payload pins** | `requirement-domain-springboot2.md` |
 | **Tests** | `tests/test_install_lifecycle.sh`, `test_domain.sh`, `test_cli.sh`, **`test_online_curl_install.sh`** (TP-CURL — real `curl \| bash` against local channel; silent-class ban) — must detect binary-only first pipe, silent 0-byte abort, and missing subcommands |
 
 ### 2.6 Protection Rule
@@ -102,7 +102,7 @@ This requirement is the **project Single Source of Truth** for springboot2 as a 
 2. Ship unit implements command split + combined empty argv.  
 3. Help ↔ dispatcher aligned.  
 4. Tests cover payload install/uninstall, self-*, combined ensure, loud failures.  
-5. Domain pins remain in `requirement-springboot2-domain.md`.  
+5. Domain pins remain in `requirement-domain-springboot2.md`.  
 
 ## 4. Design-time verification
 
@@ -121,7 +121,7 @@ This requirement is the **project Single Source of Truth** for springboot2 as a 
 |----------|------|
 | `requirement-shell-cli-zero-arguments.md` | Empty-argv detail |
 | `requirement-shell-self-management.md` | self-* only |
-| `requirement-springboot2-domain.md` | Payload content |
+| `requirement-domain-springboot2.md` | Payload content |
 | `requirement-shell-cli-interface.md` | Full command table |
 | `tests/README.md` | TP status map |
 | `tests/test_online_curl_install.sh` | TP-CURL suite |

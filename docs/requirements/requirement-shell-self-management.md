@@ -9,7 +9,7 @@ This requirement is the **project Single Source of Truth** for **CLI self-manage
 It defines lifecycle capabilities and safety rules for this shell project’s self-management commands.
 
 **Scope:** Lifecycle capabilities and safety rules for **ship-unit** commands only: `version-check`, `self-update` / `self-upgrade`, `self-uninstall`, and `about` (plus reuse of ship-unit install primitives).  
-**Out of scope (cited, not re-owned):** Payload `install` / `uninstall` / domain setup (`requirement-shell-payload-online-install.md`, `requirement-springboot2-domain.md`); full CLI dispatcher catalog (`requirement-shell-cli-interface.md`); pure re-run matrix (`requirement-shell-idempotency.md`); Type 1/2 ops.
+**Out of scope (cited, not re-owned):** Payload `install` / `uninstall` / domain setup (`requirement-shell-payload-online-install.md`, `requirement-domain-springboot2.md`); full CLI dispatcher catalog (`requirement-shell-cli-interface.md`); pure re-run matrix (`requirement-shell-idempotency.md`); Type 1/2 ops.
 
 **Must not confuse with:** Payload `install`/`uninstall` (environment/project), OS package managers, or domain start/stop.
 
@@ -20,7 +20,7 @@ It defines lifecycle capabilities and safety rules for this shell project’s se
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.1` |
+| **VERSION** | `2.3.2` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -130,7 +130,7 @@ Root may write global install path; non-root uses user path. Do not assume root 
 | **Uninstall** | `inst_self_uninstall` (bin resolve via `util_get_install_bin_path`; confirm / `confirm_required`; remove; optional PATH cleanup) |
 | **PATH ensure** | `path_add_shell` / `path_in_path` on user install |
 | **Privilege** | Type 0 only for self-management surface; no dedicated system user |
-| **Version SSOT** | `VERSION` default `2.3.1` in script config block (`VERSION="2.3.1"`) |
+| **Version SSOT** | `VERSION` default `2.3.2` in script config block (`VERSION="2.3.2"`) |
 
 #### Normative acceptance behaviors (this project)
 

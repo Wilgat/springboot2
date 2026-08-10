@@ -9,7 +9,8 @@
 #   requirement-shell-self-management (TP-CLI-11)
 #   requirement-shell-automatic-checksum (TP-CSUM-05)
 #   requirement-shell-interactive-vs-noninteractive
-# Status map: docs/reviews/test-plan.md · matrix: docs/reviews/requirement-test-matrix.md
+# Status map: reviews/test-plan.md · matrix: reviews/requirement-test-matrix.md
+# Modular: TP-MOD-01/02 · requirement-shell-modular-function-design
 # =============================================================================
 
 . "${TESTS_ROOT}/helpers.sh"
@@ -265,4 +266,36 @@ EOF
     _ec=$?
     assert_eq "TP-CLI-02 about human exit 0" 0 "$_ec"
     assert_contains "TP-CLI-02 about human mentions app" "$_out" "${APP_NAME}"
+
+    # --- TP-MOD-01: A-prefix modular families present (product law §3.1 option 1) ---
+    for _fn in out_text out_success out_error out_die inst_perform_install inst_maybe_install \
+        inst_is_installed app_main app_help app_about util_resolve_storage; do
+        if grep -qE "^${_fn}\\(\\)|^${_fn} \\(\\)" "${SCRIPT}" 2>/dev/null \
+            || grep -qE "^${_fn}\\(\\)" "${SCRIPT}"; then
+            t_pass "TP-MOD-01 ${_fn} present"
+        elif grep -q "${_fn}()" "${SCRIPT}"; then
+            t_pass "TP-MOD-01 ${_fn} present"
+        else
+            t_fail "TP-MOD-01 missing modular helper: ${_fn}"
+        fi
+    done
+
+    # --- TP-MOD-02: product source must not cite template-*/skill-* as behavioral authority ---
+    # Allow educational "never cite template" lines in comments; forbid "see template-X as authority" style.
+    if grep -nE 'requirement-(class|shell|domain)-' "${SCRIPT}" >/dev/null \
+        && ! grep -nE 'as (behavioral )?authority.*template-|cite `?template-|authority: `?template-' "${SCRIPT}" >/dev/null; then
+        # Fail if product code treats template/skill as the law path (not merely forbidding it)
+        if grep -nE '^\s*#.*(see|per|from|follow)\s+`?(template|skill)-' "${SCRIPT}" >/dev/null; then
+            t_fail "TP-MOD-02 product cites template/skill as law: $(grep -nE '^\s*#.*(see|per|from|follow)\s+`?(template|skill)-' "${SCRIPT}" | head -3)"
+        else
+            t_pass "TP-MOD-02 no template/skill authority cites in ship unit"
+        fi
+    else
+        # Still pass if no bad authority pattern even without requirement cites
+        if grep -nE '^\s*#.*(see|per|from|follow)\s+`?(template|skill)-' "${SCRIPT}" >/dev/null; then
+            t_fail "TP-MOD-02 product cites template/skill as law"
+        else
+            t_pass "TP-MOD-02 no template/skill authority cites in ship unit"
+        fi
+    fi
 }

@@ -18,7 +18,7 @@ It defines a **Type 0–centric self-managed shell CLI** (install / update / uni
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.1` |
+| **VERSION** | `2.3.2` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -63,7 +63,7 @@ Additional flags **MAY** be added only when documented here (or a superseding re
 
 1. **Single entry:** A single main dispatcher (e.g. `app_main`) **MUST** parse global flags and route commands.
 2. **Unknown command:** **MUST** fail loudly with a clear error and pointer to `help` (via output SSOT).
-3. **Zero-arg Type O-P (this product):** Empty argv **MUST NOT** dump help. **Not installed** → ship-unit + payload ensure; **installed** → non-interactive upgrade policy + domain run. Full contract: `requirement-shell-cli-zero-arguments.md` + `requirement-springboot2-domain.md` + term `payload-installer`.
+3. **Zero-arg Type O-P (this product):** Empty argv **MUST NOT** dump help. **Not installed** → ship-unit + payload ensure; **installed** → non-interactive upgrade policy + domain run. Full contract: `requirement-shell-cli-zero-arguments.md` + `requirement-domain-springboot2.md` + term `payload-installer`.
 4. **Idempotent install skip:** Install **MUST** no-op when already installed unless force/reinstall policy is set.
 5. **No raw user I/O:** User-facing messages **MUST** go through the centralized `out_*` system (see output template/term).
 
@@ -97,7 +97,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | **Primary executable** | Repo root `./springboot2` (bash `#!/bin/bash`, single-file for `curl \| sh`) |
 | **Dispatcher** | `app_main` (always invoked at end of script: `app_main "$@"` — no `${0##*/}` / APP_NAME basename gate; required for `curl \| sh`) |
 | **Output SSOT** | `out_text` + wrappers (`out_info`, `out_success`, `out_warn`, `out_error`, `out_die`, `out_plain`, `out_json`, …) |
-| **Version SSOT** | `VERSION` default `2.3.1` (script header / config block: `VERSION="2.3.1"`) |
+| **Version SSOT** | `VERSION` default `2.3.2` (script header / config block: `VERSION="2.3.2"`) |
 | **Install paths** | Global: `GLOBAL_BIN` default `/usr/local/bin`; User: `USER_BIN` default `${HOME}/.local/bin` |
 | **Remote channel env (help surface)** | `REPO_USER` / `REPO_NAME` (defaults `Wilgat` / `springboot2`); `SCRIPT_URL` composed default `https://raw.githubusercontent.com/${REPO_USER}/${REPO_NAME}/main/${APP_NAME}` (literal product default: `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2`; override via env). **`help` / `about` MUST list these operator channel vars as designed — MUST NOT list `CHECKSUM`** (install-path runtime pin only; see `requirement-shell-automatic-checksum.md`) |
 | **Type 1 / Type 2 commands** | **None** on current surface — this tool is CLI lifecycle only |
@@ -130,7 +130,7 @@ In JSON mode, help **MUST NOT** dump long human text; return a short structured 
 | `--debug` | Set `DEBUG=1` in `app_main` |
 | `--force` | Parsed by `app_main` → `FORCE=1` and `FORCE_REINSTALL=1`; uninstall, project regenerate, self-update force paths |
 | `--reset` | Sets `FORCE_REINSTALL=1` (and `RESET_PROJECT=1`); domain project wipe/regenerate |
-| `--project-dir`, `--no-run` | Domain flags — `requirement-springboot2-domain.md` |
+| `--project-dir`, `--no-run` | Domain flags — `requirement-domain-springboot2.md` |
 | `--force-user`, `--force-root` | Privilege force flags as wired |
 
 #### Dispatcher acceptance criteria (this project)
@@ -211,7 +211,7 @@ This requirement is satisfied for the springboot2 shell CLI when all of the foll
 | `docs/requirements/requirement-shell-output-requirements.md` | Output SSOT and channels |
 | `docs/requirements/requirement-shell-interactive-vs-noninteractive.md` | TTY / automation mode behavior |
 | `docs/requirements/requirement-shell-cli-zero-arguments.md` | Empty argv Type O-P payload installer (ship unit + payload) |
-| `docs/requirements/requirement-springboot2-domain.md` | Domain commands/flags / pipeline |
+| `docs/requirements/requirement-domain-springboot2.md` | Domain commands/flags / pipeline |
 | `docs/requirements/requirement-shell-idempotency.md` | Re-run safety for ensure ops |
 | `docs/requirements/requirement-shell-modular-function-design.md` | Live function families (`out_*`, lifecycle, util, domain) |
 | `docs/requirements/index.md` | Registry SSOT |

@@ -4,14 +4,14 @@
 
 > ### Payload installer law (read first — this product)
 >
-> springboot2 is a **[payload installer](../terminologies/payload-installer.md)** (**Type O-P**): empty argv / `curl \| bash` **MUST** reduce install steps via **combined ensure** — ship-unit self-install (and non-interactive self-update when policy requires) **plus** payload (SDKMAN / Java / Maven / project / optional run).
+> springboot2 is a **payload installer (Type O-P)** (**Type O-P**): empty argv / `curl \| bash` **MUST** reduce install steps via **combined ensure** — ship-unit self-install (and non-interactive self-update when policy requires) **plus** payload (SDKMAN / Java / Maven / project / optional run).
 >
 > | Situation | Empty argv **MUST** mean |
 > |-----------|---------------------------|
 > | **Not installed** | Ship-unit install-ensure **then continue into payload ensure** — **MUST NOT** exit after binary place alone |
 > | **Installed** (local or global) | Non-interactive: ship-unit **auto-upgrade** when remote newer / policy; **always payload ensure** (`cmd=run` domain pipeline) — **not** help; **not** pure binary “already installed” no-op |
 >
-> Portable Type O-S “already installed → install no-op only” and “first pipe = binary only” are **superseded** by Type O-P and `requirement-springboot2-domain.md`. **MUST NOT** dump help for bare `springboot2`. **MUST NOT** silent-success one-liner with no message and no install.
+> Portable Type O-S “already installed → install no-op only” and “first pipe = binary only” are **superseded** by Type O-P and `requirement-domain-springboot2.md`. **MUST NOT** dump help for bare `springboot2`. **MUST NOT** silent-success one-liner with no message and no install.
 
 ## 1. Purpose
 
@@ -41,7 +41,7 @@ Empty argv detect cases:
 | **Installed (global)** | Managed binary at the global path (`GLOBAL_BIN` / `/usr/local/bin/springboot2`) | Same as local for global path |
 
 **Scope:** Empty-argv routing, Type O-P combined ensure, detect cases (global / local / absent), force boundary, exit status, TTY / quiet / json, **loud one-liner outcomes**.  
-**Out of scope (own requirements):** Full command catalog (`requirement-shell-cli-interface.md`); domain pipeline depth (`requirement-springboot2-domain.md`); download/checksum detail (`requirement-shell-automatic-checksum.md`); full self-update/uninstall lifecycle detail (`requirement-shell-self-management.md` — reused on empty argv for upgrade policy); output function catalog (`requirement-shell-output-requirements.md`); general idempotency matrix beyond empty-argv rows (`requirement-shell-idempotency.md`).
+**Out of scope (own requirements):** Full command catalog (`requirement-shell-cli-interface.md`); domain pipeline depth (`requirement-domain-springboot2.md`); download/checksum detail (`requirement-shell-automatic-checksum.md`); full self-update/uninstall lifecycle detail (`requirement-shell-self-management.md` — reused on empty argv for upgrade policy); output function catalog (`requirement-shell-output-requirements.md`); general idempotency matrix beyond empty-argv rows (`requirement-shell-idempotency.md`).
 
 ---
 
@@ -50,7 +50,7 @@ Empty argv detect cases:
 | Field | Live value (ship unit `./springboot2`) |
 |-------|----------------------------------------|
 | **APP_NAME** | `springboot2` |
-| **VERSION** | `2.3.1` |
+| **VERSION** | `2.3.2` |
 | **REPO_USER** / **REPO_NAME** | `Wilgat` / `springboot2` |
 | **SCRIPT_URL** | `https://raw.githubusercontent.com/Wilgat/springboot2/main/springboot2` |
 | **Shebang / runtime** | `#!/bin/bash` (SDKMAN requires bash) |
@@ -66,12 +66,12 @@ Live scalars are owned by the ship unit Config block. Requirement **cores** stay
 
 | Term | Definition for springboot2 |
 |------|----------------------------|
-| **Type O-P** | [Payload installer](../terminologies/payload-installer.md): empty argv = combined ship-unit + payload ensure (this product). |
+| **Type O-P** | Payload installer (Type O-P): empty argv = combined ship-unit + payload ensure (this product). |
 | **Type O-S** | Script-alone online tool — **out of scope** as product class (binary-only). |
 | **Type N** | Non-online-install empty-argv type: empty argv = help — **out of scope** for springboot2. |
 | **Empty argv / zero-arg** | `$# -eq 0` at entry to `app_main` (no command tokens; classic `curl \| sh` with no trailing args). |
 | **Ship-unit install-ensure** | Converge to “managed `springboot2` binary present” (install / upgrade / force replace). |
-| **Payload ensure** | Domain pipeline: SDKMAN / Java / Maven / project + optional `run_springboot_project` (`requirement-springboot2-domain.md`). |
+| **Payload ensure** | Domain pipeline: SDKMAN / Java / Maven / project + optional `run_springboot_project` (`requirement-domain-springboot2.md`). |
 | **Combined ensure** | Ship-unit layer then payload layer without requiring a second user command. |
 | **Not installed** | `inst_is_installed` returns false (`inst_get_version` → `not installed`). |
 | **Installed (local)** | Executable at `${USER_BIN}/springboot2` (default `USER_BIN=${HOME}/.local/bin`) observed by install-detect SSOT. |
@@ -102,7 +102,7 @@ Live scalars are owned by the ship unit Config block. Requirement **cores** stay
 **Already-installed rules (Cases B and C, empty argv, force off) — Type O-P:**
 
 1. **MUST NOT** dump full help.  
-2. **MUST** enter domain/payload pipeline (default `run`) per live `app_main` and `requirement-springboot2-domain.md`.  
+2. **MUST** enter domain/payload pipeline (default `run`) per live `app_main` and `requirement-domain-springboot2.md`.  
 3. Non-interactive: **MUST** attempt ship-unit upgrade when version-check says remote is newer (or document temporary Gap until implemented).  
 4. Detect **MUST** treat either global or local managed binary as installed when that is how `inst_is_installed` / `inst_get_version` resolve paths.  
 5. Exit status and messaging for domain run follow domain + output requirements (build/run may long-run / exec; `--no-run` may exit 0 after setup).
@@ -257,7 +257,7 @@ This requirement is satisfied when all of the following hold:
 | `docs/requirements/requirement-shell-self-management.md` | self-update primitives reused on empty argv upgrade |
 | `docs/requirements/requirement-shell-output-requirements.md` | `out_*` / JSON purity |
 | `docs/requirements/requirement-shell-automatic-checksum.md` | Integrity on install download path |
-| `docs/requirements/requirement-springboot2-domain.md` | Payload pipeline |
+| `docs/requirements/requirement-domain-springboot2.md` | Payload pipeline |
 | Repo root `./springboot2` | Implementation (`app_main`, `inst_*`, domain helpers) |
 | `tests/README.md` | TP-CURP-* map |
 | `tests/test_cli.sh`, `tests/test_install_lifecycle.sh`, `tests/test_online_curl_install.sh` | Regression coverage |

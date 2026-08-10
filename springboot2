@@ -34,7 +34,7 @@ fi
 # - requirement-shell-output-requirements.md
 # - requirement-shell-interactive-vs-noninteractive.md
 # - requirement-shell-automatic-checksum.md
-# - requirement-springboot2-domain.md         (payload pins: SDKMAN/Java/Maven/project)
+# - requirement-domain-springboot2.md         (payload pins: SDKMAN/Java/Maven/project)
 # - requirement-shell-cli-storage.md
 # Plus CIAO Protection Zones and "DO NOT MODIFY" rules.
 #
@@ -62,8 +62,8 @@ APP_NAME="springboot2"
 : "${SHORT_DESCRIPTION:=${APP_DESC}}"
 : "${DESCRIPTION:=Spring Boot 2.7.18 payload online installer (CLI self-* + payload install/uninstall + run).}"
 # Product version SSOT (semver). Extractors use: grep '^VERSION="'
-VERSION="2.3.1"
-: "${VERSION:=2.3.1}"
+VERSION="2.3.2"
+: "${VERSION:=2.3.2}"
 
 # Runtime flags (safe defaults)
 : "${QUIET:=0}"
@@ -2887,7 +2887,7 @@ app_about() {
 
 app_version() {
     : "${APP_NAME:=springboot2}"
-    : "${VERSION:=2.3.1}"
+    : "${VERSION:=2.3.2}"
     : "${JSON:=0}"
     if [ "${JSON}" -eq 1 ]; then
         # Same machine contract as historical app_main inline path

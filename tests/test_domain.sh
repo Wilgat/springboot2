@@ -2,7 +2,7 @@
 # tests/test_domain.sh — Spring Boot domain surface (TP-DOM-*)
 # =============================================================================
 # Design-time: declare TP-DOM when specializing:
-#   requirement-springboot2-domain
+#   requirement-domain-springboot2
 #   requirement-shell-payload-online-install (payload layer)
 #   requirement-shell-cli-zero-arguments (empty argv domain ensure)
 # Status map: docs/reviews/test-plan.md · matrix: docs/reviews/requirement-test-matrix.md
