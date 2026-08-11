@@ -16,5 +16,7 @@ Durable failure modes. **Always re-check on product review.**
 | L-DOMAIN-NAME-01 | Domain SSOT basename not `requirement-domain-*` | Renamed to `requirement-domain-springboot2.md` | **closed** 2026-08-10 |
 | L-MOD-01 | Modular/prefix hygiene claimed without **TP-*** primary | **TP-MOD-01** / **TP-MOD-02** have in `tests/test_cli.sh` | **closed** 2026-08-10 |
 | L-DOCS-01 | Requirements README inventory drift | README refreshed to class + 10 shell + domain | **closed** 2026-08-10 |
+| L-HK-01 | `harness-knowledge.md` said six peer classes after eleven-class model | Wording **eleven**; re-check after H2 | **closed** 2026-08-11 |
+| L-HK-02 | Local harness lag vs RAM genesis after H2 | Re-H2 on housekeeping; counts should match GENESIS_SSOT | **closed** 2026-08-11 (re-sync) |
 
 **Intentionally out of scope for default lessons:** Type 1 sudoers elev tables, real public-network SDKMAN install as Core CI (stubbed under isolated `HOME`), Spring Boot 3.x retarget without product decision.

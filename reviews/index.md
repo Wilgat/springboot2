@@ -5,6 +5,8 @@
 | 2026-08-10 | `reports/2026-08-10-review-plans-bootstrap.md` | Bootstrap `reviews/` + test plan + lessons from suite/REQ residual | **Revise** (law gaps open; suite green) | PASS=162 FAIL=0 SKIP=1 |
 | 2026-08-10 | `reports/2026-08-10-fix-all-residuals.md` | Close class/domain/MOD/docs residuals + companion digest | **Pass** (watch lessons remain) | PASS=174 FAIL=0 SKIP=1 |
 | 2026-08-10 | `reports/2026-08-10-h2-sync-from-ram-genesis.md` | H2 pull harness from `/dev/shm/genesis-template` | **Pass** | product REQs 12 preserved |
+| 2026-08-11 | `reports/2026-08-11-harness-knowledge-review.md` | Harness knowledge audit (post-H2, product 2.3.2) | **Revise** | H-HK-01..04 open at audit time |
+| 2026-08-11 | `reports/2026-08-11-software-dev-housekeeping.md` | Full software-dev housekeeping cycle | **Pass** | H2 re-sync; REQs confirm-as-is; suite green |
 
 ## Open summary (from latest report)
 

@@ -83,7 +83,7 @@
 | TP map | `reviews/test-plan.md` |
 | RTM | `reviews/requirement-test-matrix.md` |
 
-**Last suite run (agent host):** 2026-08-10 fix-all — **PASS=174 FAIL=0 SKIP=1**
+**Last suite run (agent host):** 2026-08-11 housekeeping — **PASS=174 FAIL=0 SKIP=1**
 
 ---
 
